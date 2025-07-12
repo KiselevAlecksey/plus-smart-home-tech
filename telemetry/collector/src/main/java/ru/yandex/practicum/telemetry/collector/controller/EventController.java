@@ -1,6 +1,7 @@
 package ru.yandex.practicum.telemetry.collector.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -37,7 +38,7 @@ public class EventController {
     }
 
     @PostMapping("/sensors")
-    public void sensorEvent(@Validated @RequestBody SensorEvent event) {
+    public void sensorEvent(@Valid @RequestBody SensorEvent event) {
         log.warn("==> SensorEvent {} start", event);
         SensorEventHandler sensorEventHandler = sensorEventHandlers.get(event.getType());
         if (sensorEventHandler == null) {
@@ -48,7 +49,7 @@ public class EventController {
     }
 
     @PostMapping("/hubs")
-    public void hubEvent(@Validated @RequestBody HubEvent event) {
+    public void hubEvent(@Valid @RequestBody HubEvent event) {
         log.warn("==> HubEvent {} start", event);
         HubEventHandler hubEventHandler = hubEventHandlers.get(event.getType());
         if (hubEventHandler == null) {

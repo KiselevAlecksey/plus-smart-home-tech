@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import ru.yandex.practicum.telemetry.collector.cofiguration.TopicType;
 import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEvent;
 import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEventType;
 import ru.yandex.practicum.telemetry.collector.service.KafkaEventProducer;
@@ -38,6 +37,6 @@ public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> imple
 
         log.warn("==> avro {}", eventAvro);
 
-        producer.getProducer().send(new ProducerRecord<>(producer.getTopics().get(TopicType.SENSORS_EVENTS), eventAvro));
+        producer.sendSensorEvent(eventAvro);
     }
 }
