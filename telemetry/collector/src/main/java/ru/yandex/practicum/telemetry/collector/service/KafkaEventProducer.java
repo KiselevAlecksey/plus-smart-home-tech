@@ -7,6 +7,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
@@ -21,12 +22,12 @@ import java.time.Duration;
 public class KafkaEventProducer {
     private final Producer<String, SpecificRecordBase> producer;
     private final TopicConfig topicConfig;
-    private final int closeTime;
+    @Value("${spring.application.close.time}")
+    private int closeTime;
 
     public KafkaEventProducer(KafkaConfig config, TopicConfig topicConfig) {
         this.producer = new KafkaProducer<>(config.getProperties());
         this.topicConfig = new TopicConfig(topicConfig);
-        this.closeTime = 15;
     }
 
     public void sendHubEvent(HubEventAvro eventAvro) {
@@ -40,7 +41,7 @@ public class KafkaEventProducer {
     public void closeKafkaProducer() {
         try {
             producer.flush();
-            producer.close(Duration.ofSeconds(15));
+            producer.close(Duration.ofSeconds(closeTime));
         } catch (KafkaException exception) {
             log.error("Failed to close Kafka producer: {}", exception.getMessage(), exception);
         }
