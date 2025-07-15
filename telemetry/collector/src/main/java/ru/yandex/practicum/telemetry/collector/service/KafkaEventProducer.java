@@ -22,7 +22,7 @@ import java.time.Duration;
 public class KafkaEventProducer {
     private final Producer<String, SpecificRecordBase> producer;
     private final TopicConfig topicConfig;
-    @Value("${spring.application.close.time}")
+    @Value("${collector.kafka.producer.properties.close-time}")
     private int closeTime;
 
     public KafkaEventProducer(KafkaConfig config, TopicConfig topicConfig) {
