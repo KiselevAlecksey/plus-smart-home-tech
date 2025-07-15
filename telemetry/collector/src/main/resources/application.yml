@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: collector
+
+logging:
+  level:
+    ru.yandex.practicum.telemetry: TRACE
+    org:
+      springframework: ERROR
+      appache.kafka: WARN
+
+collector:
+  kafka:
+    producer:
+      properties:
+        close-time: 15
+        bootstrap.servers: localhost:9092
+        client.id: "telemetry.collector"
+        key.serializer: org.apache.kafka.common.serialization.StringSerializer
+        value.serializer: ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer
+      topics:
+        sensors:
+          default: telemetry.sensors.v1
+        hubs:
+          default: telemetry.hubs.v1
