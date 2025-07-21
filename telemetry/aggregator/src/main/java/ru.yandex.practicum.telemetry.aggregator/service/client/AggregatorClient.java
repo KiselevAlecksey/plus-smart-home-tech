@@ -1,4 +1,4 @@
-package ru.yandex.practicum.telemetry.aggregator.service;
+package ru.yandex.practicum.telemetry.aggregator.service.client;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -8,10 +8,13 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.telemetry.aggregator.config.KafkaConfig;
+import ru.yandex.practicum.telemetry.aggregator.service.KafkaClient;
+
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class AggregatorClient implements KafkaClient {
+public class AggregatorClient implements Client {
     private final KafkaConfig config;
     private Producer<String, SpecificRecordBase> producer;
     private Consumer<String, SpecificRecordBase> consumer;
@@ -25,11 +28,21 @@ public class AggregatorClient implements KafkaClient {
     }
 
     @Override
+    public Map<String, String> getProducerTopics() {
+        return config.getProducer().getTopics();
+    }
+
+    @Override
     public Consumer<String, SpecificRecordBase> getConsumer() {
         if (consumer == null) {
             initConsumer();
         }
         return consumer;
+    }
+
+    @Override
+    public Map<String, String> getConsumerTopics() {
+        return config.getConsumer().getTopics();
     }
 
     @Override
@@ -43,10 +56,10 @@ public class AggregatorClient implements KafkaClient {
     }
 
     private void initProducer() {
-        producer = new KafkaProducer<>(config.getProducerProperties());
+        producer = new KafkaProducer<>(config.getProducer().getProperties());
     }
 
     private void initConsumer() {
-        consumer = new KafkaConsumer<>(config.getConsumerProperties());
+        consumer = new KafkaConsumer<>(config.getConsumer().getProperties());
     }
 }
