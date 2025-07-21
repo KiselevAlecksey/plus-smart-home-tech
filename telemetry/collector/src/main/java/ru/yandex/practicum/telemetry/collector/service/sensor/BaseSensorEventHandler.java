@@ -1,8 +1,9 @@
 package ru.yandex.practicum.telemetry.collector.service.sensor;
 
-import com.google.protobuf.Timestamp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
+import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 import ru.yandex.practicum.telemetry.event.SensorEventProto;
 import ru.yandex.practicum.telemetry.collector.service.KafkaEventProducer;
 
@@ -10,44 +11,32 @@ import java.time.Instant;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class BaseSensorEventHandler implements SensorEventHandler {
+public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> implements SensorEventHandler {
     protected final KafkaEventProducer producer;
+
+    protected abstract T toAvro(SensorEventProto event);
 
     @Override
     public abstract SensorEventProto.PayloadCase getMessageType();
 
     @Override
     public void handle(SensorEventProto event) {
-        SensorEventProto.PayloadCase messageType = event.getPayloadCase();
-
-        if (messageType != getMessageType()) {
-            throw new IllegalArgumentException("Неизвестный тип события: "
-                    + event.getHubId() + " ожидаемый тип: " + getMessageType());
+        if (!event.getPayloadCase().equals(getMessageType())) {
+            throw new IllegalArgumentException("Неизвестный тип события: " + event.getPayloadCase());
         }
 
-        SensorEventProto updatedEvent = updateEventWithNewTimestamp(event);
+        T payload = toAvro(event);
 
-        log.info("Отправка события в Kafka: {}", updatedEvent);
-        producer.sendSensorEvent(updatedEvent);
-    }
-
-    protected SensorEventProto updateEventWithNewTimestamp(SensorEventProto event) {
-        Timestamp timestamp = event.hasTimestamp()
-                ? event.getTimestamp()
-                : Timestamp.newBuilder()
-                .setSeconds(Instant.now().getEpochSecond())
-                .setNanos(Instant.now().getNano())
-                .build();
-
-        SensorEventProto.Builder builder = SensorEventProto.newBuilder(event)
+        Instant timestamp = event.hasTimestamp()
+                ? Instant.ofEpochSecond(event.getTimestamp().getSeconds(), event.getTimestamp().getNanos())
+                : Instant.now();
+        SensorEventAvro sensorEventAvro = SensorEventAvro.newBuilder()
                 .setId(event.getId())
                 .setHubId(event.getHubId())
-                .setTimestamp(timestamp);
+                .setTimestamp(timestamp)
+                .setPayload(payload)
+                .build();
 
-
-        return processSpecificPayload(builder, event);
+        producer.sendSensorEvent(sensorEventAvro);
     }
-
-    protected abstract SensorEventProto processSpecificPayload(
-            SensorEventProto.Builder builder, SensorEventProto event);
 }

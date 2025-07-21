@@ -1,62 +1,51 @@
 package ru.yandex.practicum.telemetry.collector.service.hub;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.kafka.telemetry.event.*;
 import ru.yandex.practicum.telemetry.event.*;
 import ru.yandex.practicum.telemetry.collector.service.KafkaEventProducer;
 
-@Component
-public class ScenarioAddedEventHandler extends BaseHubEventHandler {
+import java.util.List;
 
+@Component
+public class ScenarioAddedEventHandler extends BaseHubEventHandler<ScenarioAddedEventAvro> {
     public ScenarioAddedEventHandler(KafkaEventProducer producer) {
         super(producer);
     }
 
     @Override
     public HubEventProto.PayloadCase getMessageType() {
-        return HubEventProto.PayloadCase.SCENARIO_ADDED_EVENT_PROTO;
+        return HubEventProto.PayloadCase.SCENARIO_ADDED;
     }
 
     @Override
-    protected HubEventProto processSpecificPayload(HubEventProto.Builder builder, HubEventProto event) {
-        ScenarioAddedEventProto scenarioPayload = event.getScenarioAddedEventProto();
+    protected ScenarioAddedEventAvro toAvro(HubEventProto event) {
+        ScenarioAddedEventProto scenarioAddedEventProto = event.getScenarioAdded();
 
-        /*List<ScenarioConditionProto> conditions = scenarioPayload.getConditionList().stream()
-                .map(s -> {
-                    ScenarioConditionProto.Builder conditionBuilder  = ScenarioConditionProto.newBuilder()
-                            .setSensorId(s.getSensorId())
-                            .setType(s.getType())
-                            .setOperation(s.getOperation());
-
-                    switch (s.getValueCase()) {
-                        case BOOL_VALUE:
-                            conditionBuilder .setBoolValue(s.getBoolValue());
-                            break;
-                        case INT_VALUE:
-                            conditionBuilder .setIntValue(s.getIntValue());
-                            break;
-                        case VALUE_NOT_SET:
-                            throw new IllegalArgumentException("Недопустимый тип переменной: "
-                                    + s.getValueCase() + " ожидаемый тип: " + BOOL_VALUE + ", или " + INT_VALUE);
-                    }
-                    return conditionBuilder .build();
-                })
+        List<ScenarioConditionAvro> conditions = scenarioAddedEventProto.getConditionList().stream()
+                .map(s -> ScenarioConditionAvro.newBuilder()
+                        .setSensorId(s.getSensorId())
+                        .setType(ConditionTypeAvro.valueOf(s.getType().name()))
+                        .setOperation(ConditionOperationAvro.valueOf(s.getOperation().name()))
+                        .setValue(switch (s.getValueCase()) {
+                            case BOOL_VALUE -> s.getBoolValue();
+                            case INT_VALUE -> s.getIntValue();
+                            default -> null;
+                        })
+                        .build())
                 .toList();
-
-        List<DeviceActionProto> actions = scenarioPayload.getActionList().stream()
-                .map(a -> DeviceActionProto.newBuilder()
+        List<DeviceActionAvro> actions = scenarioAddedEventProto.getActionList().stream()
+                .map(a -> DeviceActionAvro.newBuilder()
                         .setSensorId(a.getSensorId())
-                        .setType(a.getType())
+                        .setType(ActionTypeAvro.valueOf(a.getType().name()))
                         .setValue(a.getValue())
                         .build())
-                .toList();*/
+                .toList();
 
-        ScenarioAddedEventProto updatedPayload = ScenarioAddedEventProto.newBuilder(scenarioPayload)
-                .setId(scenarioPayload.getId())
-                .addAllCondition(scenarioPayload.getConditionList())
-                .addAllAction(scenarioPayload.getActionList())
-                .build();
-
-        return builder.setScenarioAddedEventProto(updatedPayload)
+        return ScenarioAddedEventAvro.newBuilder()
+                .setName(scenarioAddedEventProto.getName())
+                .setConditions(conditions)
+                .setActions(actions)
                 .build();
     }
 }

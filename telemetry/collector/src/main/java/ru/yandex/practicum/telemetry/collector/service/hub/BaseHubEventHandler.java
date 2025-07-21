@@ -1,8 +1,9 @@
 package ru.yandex.practicum.telemetry.collector.service.hub;
 
-import com.google.protobuf.Timestamp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
+import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 import ru.yandex.practicum.telemetry.event.HubEventProto;
 import ru.yandex.practicum.telemetry.collector.service.KafkaEventProducer;
 
@@ -10,42 +11,33 @@ import java.time.Instant;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class BaseHubEventHandler implements HubEventHandler {
+public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implements HubEventHandler {
     protected final KafkaEventProducer producer;
+
+    protected abstract T toAvro(HubEventProto event);
 
     @Override
     public abstract HubEventProto.PayloadCase getMessageType();
 
     @Override
     public void handle(HubEventProto event) {
-        HubEventProto.PayloadCase messageType = event.getPayloadCase();
-
-        if (messageType != getMessageType()) {
-            throw new IllegalArgumentException("Неизвестный тип события: "
-                    + event.getHubId() + " ожидаемый тип: " + getMessageType());
+        if (!event.getPayloadCase().equals(getMessageType())) {
+            throw new IllegalArgumentException("Неизвестный тип события: " + event.getPayloadCase());
         }
 
-        HubEventProto updatedEvent = updateEventWithNewTimestamp(event);
+        T payload = toAvro(event);
 
-        log.info("Отправка события в Kafka: {}", updatedEvent);
-        producer.sendHubEvent(updatedEvent);
-    }
-
-    protected HubEventProto updateEventWithNewTimestamp(HubEventProto event) {
-        Timestamp timestamp = event.hasTimestamp()
-                ? event.getTimestamp()
-                : Timestamp.newBuilder()
-                        .setSeconds(Instant.now().getEpochSecond())
-                        .setNanos(Instant.now().getNano())
-                        .build();
-
-        HubEventProto.Builder builder = HubEventProto.newBuilder(event)
+        Instant timestamp = event.hasTimestamp()
+                ? Instant.ofEpochSecond(event.getTimestamp().getSeconds(), event.getTimestamp().getNanos())
+                : Instant.now();
+        HubEventAvro eventAvro = HubEventAvro.newBuilder()
                 .setHubId(event.getHubId())
-                .setTimestamp(timestamp);
+                .setTimestamp(timestamp)
+                .setPayload(payload)
+                .build();
 
-        return processSpecificPayload(builder, event);
+        log.warn("==> avro {}", eventAvro);
+
+        producer.sendHubEvent(eventAvro);
     }
-
-    protected abstract HubEventProto processSpecificPayload(
-            HubEventProto.Builder builder, HubEventProto event);
 }

@@ -20,7 +20,7 @@ collector:
         bootstrap.servers: localhost:9092
         client.id: "telemetry.collector"
         key.serializer: org.apache.kafka.common.serialization.StringSerializer
-        value.serializer: ru.yandex.practicum.kafka.serializer.ProtobufKafkaSerializer
+        value.serializer: ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer
       topics:
         sensors:
           default: telemetry.sensors.v1
