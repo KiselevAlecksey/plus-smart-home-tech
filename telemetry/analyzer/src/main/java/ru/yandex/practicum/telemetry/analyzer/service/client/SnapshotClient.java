@@ -16,6 +16,7 @@ import java.util.Map;
 public class SnapshotClient implements Client {
     private final KafkaConfig config;
     private Consumer<String, SpecificRecordBase> consumer;
+    private static final String CONSUMER_SNAPSHOT_NAME = "snapshot-consumer";
 
     @Override
     public Consumer<String, SpecificRecordBase> getConsumer() {
@@ -27,7 +28,7 @@ public class SnapshotClient implements Client {
 
     @Override
     public Map<String, String> getTopics() {
-        return config.getSnapshotConsumer().getTopics();
+        return config.getConsumers().get(CONSUMER_SNAPSHOT_NAME).getTopics();
     }
 
     @Override
@@ -39,10 +40,10 @@ public class SnapshotClient implements Client {
 
     @Override
     public List<String> getAllTopics() {
-        return new ArrayList<>(config.getSnapshotConsumer().getTopics().values());
+        return new ArrayList<>(config.getConsumers().get(CONSUMER_SNAPSHOT_NAME).getTopics().values());
     }
 
     private void init() {
-        consumer = new KafkaConsumer<>(config.getSnapshotConsumer().getProperties());
+        consumer = new KafkaConsumer<>(config.getConsumers().get(CONSUMER_SNAPSHOT_NAME).getProperties());
     }
 }

@@ -16,6 +16,7 @@ import java.util.Map;
 public class HubClient implements Client {
     private final KafkaConfig config;
     private Consumer<String, SpecificRecordBase> consumer;
+    private static final String CONSUMER_HUB_NAME = "hub-consumer";
 
     @Override
     public Consumer<String, SpecificRecordBase> getConsumer() {
@@ -27,7 +28,7 @@ public class HubClient implements Client {
 
     @Override
     public Map<String, String> getTopics() {
-        return config.getHubConsumer().getTopics();
+        return config.getConsumers().get(CONSUMER_HUB_NAME).getTopics();
     }
 
     @Override
@@ -39,10 +40,10 @@ public class HubClient implements Client {
 
     @Override
     public List<String> getAllTopics() {
-        return new ArrayList<>(config.getHubConsumer().getTopics().values());
+        return new ArrayList<>(config.getConsumers().get(CONSUMER_HUB_NAME).getTopics().values());
     }
 
     private void init() {
-        consumer = new KafkaConsumer<>(config.getHubConsumer().getProperties());
+        consumer = new KafkaConsumer<>(config.getConsumers().get(CONSUMER_HUB_NAME).getProperties());
     }
 }
