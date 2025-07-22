@@ -16,7 +16,7 @@ import java.util.Map;
 public class HubClient implements Client {
     private final KafkaConfig config;
     private Consumer<String, SpecificRecordBase> consumer;
-    private static final String CONSUMER_HUB_NAME = "hub-consumer";
+    private static final String CONSUMER_HUB_NAME = "hubs";
 
     @Override
     public Consumer<String, SpecificRecordBase> getConsumer() {

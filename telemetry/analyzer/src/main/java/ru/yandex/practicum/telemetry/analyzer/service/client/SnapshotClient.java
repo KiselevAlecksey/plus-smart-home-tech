@@ -16,7 +16,7 @@ import java.util.Map;
 public class SnapshotClient implements Client {
     private final KafkaConfig config;
     private Consumer<String, SpecificRecordBase> consumer;
-    private static final String CONSUMER_SNAPSHOT_NAME = "snapshot-consumer";
+    private static final String CONSUMER_SNAPSHOT_NAME = "snapshots";
 
     @Override
     public Consumer<String, SpecificRecordBase> getConsumer() {

@@ -26,26 +26,27 @@ logging:
 
 analyzer:
   kafka:
-    snapshot-consumer:
-      properties:
-        group.id: "analyzer-snapshot-client"
-        bootstrap.servers: localhost:9092
-        client.id: "telemetry.analyzer.snapshot"
-        key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-        value.deserializer: ru.yandex.practicum.kafka.serializer.SensorsSnapshotDeserializer
-        enable.auto.commit: false
-      topics:
-        sensors-snapshots: telemetry.snapshots.v1
-    hub-consumer:
-      properties:
-        group.id: "analyzer-hub-client"
-        bootstrap.servers: localhost:9092
-        client.id: "telemetry.analyzer.hub"
-        key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-        value.deserializer: ru.yandex.practicum.kafka.serializer.HubEventDeserializer
-        enable.auto.commit: false
-      topics:
-        hubs-events: telemetry.hubs.v1
+    consumers:
+      snapshots:
+        properties:
+          group.id: "analyzer-snapshot-client"
+          bootstrap.servers: localhost:9092
+          client.id: "telemetry.analyzer.snapshot"
+          key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value.deserializer: ru.yandex.practicum.kafka.serializer.SensorsSnapshotDeserializer
+          enable.auto.commit: false
+        topics:
+          sensors-snapshots: telemetry.snapshots.v1
+      hubs:
+        properties:
+          group.id: "analyzer-hub-client"
+          bootstrap.servers: localhost:9092
+          client.id: "telemetry.analyzer.hub"
+          key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value.deserializer: ru.yandex.practicum.kafka.serializer.HubEventDeserializer
+          enable.auto.commit: false
+        topics:
+          hubs-events: telemetry.hubs.v1
 
 grpc:
   client:
