@@ -1,21 +1,25 @@
 package ru.yandex.practicum.telemetry.collector.cofiguration;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
-import java.util.Properties;
+import java.util.List;
+import java.util.Map;
 
 @Getter
-@ConfigurationProperties("collector.kafka.producer")
+@Setter
+@Configuration
+@ConfigurationProperties("collector.kafka")
 public class KafkaConfig {
-    private final Properties properties;
+    private Map<String, ProducerConfig> producers;
 
-    public KafkaConfig(Properties properties) {
-        this.properties = properties;
-    }
-
-    public Properties getProperties() {
-        return (Properties) properties.clone();
+    @Getter
+    @Setter
+    public static class ProducerConfig {
+        private Map<String, String> properties;
+        private List<TopicConfig> topics;
     }
 }
 

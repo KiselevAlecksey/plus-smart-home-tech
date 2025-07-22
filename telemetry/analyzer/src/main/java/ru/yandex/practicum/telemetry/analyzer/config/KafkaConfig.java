@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -16,49 +17,30 @@ import java.util.Properties;
 @Configuration
 @ConfigurationProperties("analyzer.kafka")
 public class KafkaConfig {
-    private HubConfig hubConsumer;
-    private SnapshotConfig snapshotConsumer;
+    Map<String, ConsumerConfig> consumers;
 
     @Bean
-    public HubEventConsumer hubEventConsumer() {
-        return new HubEventConsumer() {
-            @Override
-            public Properties getHubProperties() {
-                return hubConsumer.getProperties();
-            }
+    public Map<String, KafkaConsumerConfig> consumerConfigs() {
+        return consumers.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> new KafkaConsumerConfig() {
+                            @Override
+                            public Properties getProperties() {
+                                return entry.getValue().getProperties();
+                            }
 
-            @Override
-            public Map<String, String> getHubTopics() {
-                return hubConsumer.getTopics();
-            }
-        };
-    }
-
-    @Bean
-    public SnapshotsConsumer snapshotsConsumer() {
-        return new SnapshotsConsumer() {
-            @Override
-            public Properties getSnapshotProperties() {
-                return snapshotConsumer.getProperties();
-            }
-
-            @Override
-            public Map<String, String> getSnapshotTopics() {
-                return snapshotConsumer.getTopics();
-            }
-        };
+                            @Override
+                            public Map<String, String> getTopics() {
+                                return entry.getValue().getTopics();
+                            }
+                        }
+                ));
     }
 
     @Getter
     @Setter
-    public static class HubConfig {
-        private Properties properties;
-        private Map<String, String> topics;
-    }
-
-    @Getter
-    @Setter
-    public static class SnapshotConfig {
+    public static class ConsumerConfig {
         private Properties properties;
         private Map<String, String> topics;
     }
