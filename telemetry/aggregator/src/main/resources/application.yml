@@ -17,6 +17,7 @@ aggregator:
         client.id: "telemetry.aggregator"
         key.serializer: org.apache.kafka.common.serialization.StringSerializer
         value.serializer: ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer
+        close-time: 15
       topics:
         sensors-snapshots: telemetry.snapshots.v1
     consumer:
@@ -26,6 +27,8 @@ aggregator:
         client.id: "telemetry.aggregator"
         key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         value.deserializer: ru.yandex.practicum.kafka.serializer.SensorEventDeserializer
-        enable.auto.commit: false
+        enable-auto-commit: true
+        auto-commit-interval: 1000
+        close-time: 15
       topics:
         sensors-events: telemetry.sensors.v1

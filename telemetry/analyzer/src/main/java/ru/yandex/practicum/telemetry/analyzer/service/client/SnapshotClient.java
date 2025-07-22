@@ -7,6 +7,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.telemetry.analyzer.config.KafkaConfig;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Component("snapshotClient")
@@ -25,7 +27,7 @@ public class SnapshotClient implements Client {
 
     @Override
     public Map<String, String> getTopics() {
-        return config.getSnapshot().getTopics();
+        return config.getSnapshotConsumer().getTopics();
     }
 
     @Override
@@ -35,7 +37,12 @@ public class SnapshotClient implements Client {
         }
     }
 
+    @Override
+    public List<String> getAllTopics() {
+        return new ArrayList<>(config.getSnapshotConsumer().getTopics().values());
+    }
+
     private void init() {
-        consumer = new KafkaConsumer<>(config.getSnapshot().getProperties());
+        consumer = new KafkaConsumer<>(config.getSnapshotConsumer().getProperties());
     }
 }

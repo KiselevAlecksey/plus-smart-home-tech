@@ -26,7 +26,7 @@ logging:
 
 analyzer:
   kafka:
-    snapshot:
+    snapshot-consumer:
       properties:
         group.id: "analyzer-snapshot-client"
         bootstrap.servers: localhost:9092
@@ -36,7 +36,7 @@ analyzer:
         enable.auto.commit: false
       topics:
         sensors-snapshots: telemetry.snapshots.v1
-    hub:
+    hub-consumer:
       properties:
         group.id: "analyzer-hub-client"
         bootstrap.servers: localhost:9092

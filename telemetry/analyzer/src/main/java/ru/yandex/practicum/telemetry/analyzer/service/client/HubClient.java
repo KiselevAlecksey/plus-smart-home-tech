@@ -7,6 +7,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.telemetry.analyzer.config.KafkaConfig;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Component("hubClient")
@@ -25,7 +27,7 @@ public class HubClient implements Client {
 
     @Override
     public Map<String, String> getTopics() {
-        return config.getHub().getTopics();
+        return config.getHubConsumer().getTopics();
     }
 
     @Override
@@ -35,7 +37,12 @@ public class HubClient implements Client {
         }
     }
 
+    @Override
+    public List<String> getAllTopics() {
+        return new ArrayList<>(config.getHubConsumer().getTopics().values());
+    }
+
     private void init() {
-        consumer = new KafkaConsumer<>(config.getHub().getProperties());
+        consumer = new KafkaConsumer<>(config.getHubConsumer().getProperties());
     }
 }

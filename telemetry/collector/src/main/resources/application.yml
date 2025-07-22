@@ -1,6 +1,16 @@
 spring:
   application:
     name: collector
+  jmx:
+    enabled: true
+management:
+  endpoints:
+    jmx:
+      exposure:
+        include: "*"
+    web:
+      exposure:
+        include: health,info
 
 logging:
   level:

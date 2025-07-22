@@ -34,7 +34,7 @@ public class SnapshotProcessor {
     public void start() {
         Runtime.getRuntime().addShutdownHook(new Thread(snapshotClient.getConsumer()::wakeup));
         try {
-            snapshotClient.getConsumer().subscribe(List.of(snapshotClient.getTopics().get("sensors-snapshots")));
+            consumerSubscribe();
             while (true) {
                 try {
                     ConsumerRecords<String, SpecificRecordBase> records = snapshotClient.getConsumer().poll(CONSUME_ATTEMPT_TIMEOUT);
@@ -61,5 +61,9 @@ public class SnapshotProcessor {
                 snapshotClient.stop();
             }
         }
+    }
+
+    private void consumerSubscribe() {
+        snapshotClient.getConsumer().subscribe(snapshotClient.getAllTopics());
     }
 }

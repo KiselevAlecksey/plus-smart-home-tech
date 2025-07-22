@@ -46,6 +46,7 @@ public class KafkaConfig {
             public Map<String, String> getConsumerTopics() {
                 return consumer.getTopics();
             }
+
         };
     }
 

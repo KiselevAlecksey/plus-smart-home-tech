@@ -37,9 +37,8 @@ public class AggregatorStarter {
 
     public void start() {
         Runtime.getRuntime().addShutdownHook(new Thread(client.getConsumer()::wakeup));
-
         try {
-            client.getConsumer().subscribe(List.of(config.getConsumer().getTopics().get("sensors-events")));
+            consumerSubscribe();
             while (true) {
                 ConsumerRecords<String, SpecificRecordBase> records = client.getConsumer().poll(CONSUME_ATTEMPT_TIMEOUT);
                 int count = 0;
@@ -49,7 +48,7 @@ public class AggregatorStarter {
                     Optional<SensorsSnapshotAvro> snapshot = updateState(event);
                     snapshot.ifPresent(s -> {
                         snapshots.put(event.getHubId(), s);
-                        client.getProducer().send(new ProducerRecord<>(client.getProducerTopics().get("sensors-snapshots"), s));
+                        sendProducerEvent(s);
                         log.info("{}", s);
                     });
                     manageOffsets(record, count, client.getConsumer());
@@ -67,8 +66,12 @@ public class AggregatorStarter {
         }
     }
 
-    private void sendEvent(SensorsSnapshotAvro event) {
+    private void sendProducerEvent(SensorsSnapshotAvro event) {
+        client.getProducer().send(new ProducerRecord<>(client.getProducerTopics().get("sensors-snapshots"), event));
+    }
 
+    private void consumerSubscribe() {
+        client.getConsumer().subscribe(List.of(config.getConsumer().getTopics().get("sensors-events")));
     }
 
     private void manageOffsets(

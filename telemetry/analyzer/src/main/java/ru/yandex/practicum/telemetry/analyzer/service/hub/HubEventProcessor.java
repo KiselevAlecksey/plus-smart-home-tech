@@ -41,7 +41,7 @@ public class HubEventProcessor implements Runnable {
                 .collect(Collectors.toMap(HubEventHandler::getMessageType, Function.identity()));
         Runtime.getRuntime().addShutdownHook(new Thread(hubClient.getConsumer()::wakeup));
         try {
-            hubClient.getConsumer().subscribe(List.of(hubClient.getTopics().get("hubs-events")));
+            consumerSubscribe();
             while (true) {
                 try {
                     ConsumerRecords<String, SpecificRecordBase> records =
@@ -75,5 +75,9 @@ public class HubEventProcessor implements Runnable {
                 hubClient.stop();
             }
         }
+    }
+
+    private void consumerSubscribe() {
+        hubClient.getConsumer().subscribe(hubClient.getAllTopics());
     }
 }

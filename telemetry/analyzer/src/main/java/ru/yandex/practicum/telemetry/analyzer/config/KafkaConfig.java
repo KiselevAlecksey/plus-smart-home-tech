@@ -16,20 +16,20 @@ import java.util.Properties;
 @Configuration
 @ConfigurationProperties("analyzer.kafka")
 public class KafkaConfig {
-    private HubConfig hub;
-    private SnapshotConfig snapshot;
+    private HubConfig hubConsumer;
+    private SnapshotConfig snapshotConsumer;
 
     @Bean
     public HubEventConsumer hubEventConsumer() {
         return new HubEventConsumer() {
             @Override
             public Properties getHubProperties() {
-                return hub.getProperties();
+                return hubConsumer.getProperties();
             }
 
             @Override
             public Map<String, String> getHubTopics() {
-                return hub.getTopics();
+                return hubConsumer.getTopics();
             }
         };
     }
@@ -39,12 +39,12 @@ public class KafkaConfig {
         return new SnapshotsConsumer() {
             @Override
             public Properties getSnapshotProperties() {
-                return snapshot.getProperties();
+                return snapshotConsumer.getProperties();
             }
 
             @Override
             public Map<String, String> getSnapshotTopics() {
-                return snapshot.getTopics();
+                return snapshotConsumer.getTopics();
             }
         };
     }
