@@ -1,12 +1,11 @@
 package ru.yandex.practicum.telemetry.collector.service.hub;
 
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.telemetry.collector.model.hub.DeviceAddedEvent;
-import ru.yandex.practicum.telemetry.collector.model.hub.HubEvent;
-import ru.yandex.practicum.telemetry.collector.model.hub.HubEventType;
-import ru.yandex.practicum.telemetry.collector.service.KafkaEventProducer;
 import ru.yandex.practicum.kafka.telemetry.event.DeviceAddedEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.DeviceTypeAvro;
+import ru.yandex.practicum.telemetry.event.DeviceAddedEventProto;
+import ru.yandex.practicum.telemetry.event.HubEventProto;
+import ru.yandex.practicum.telemetry.collector.service.KafkaEventProducer;
 
 @Component
 public class DeviceAddedEventHandler extends BaseHubEventHandler<DeviceAddedEventAvro> {
@@ -15,17 +14,17 @@ public class DeviceAddedEventHandler extends BaseHubEventHandler<DeviceAddedEven
     }
 
     @Override
-    protected DeviceAddedEventAvro toAvro(HubEvent event) {
-        DeviceAddedEvent deviceAddedEvent = (DeviceAddedEvent) event;
+    protected DeviceAddedEventAvro toAvro(HubEventProto event) {
+        DeviceAddedEventProto deviceAddedEventProto = event.getDeviceAdded();
 
         return DeviceAddedEventAvro.newBuilder()
-                .setId(deviceAddedEvent.getId())
-                .setType(DeviceTypeAvro.valueOf(deviceAddedEvent.getDeviceType().name()))
+                .setId(deviceAddedEventProto.getId())
+                .setType(DeviceTypeAvro.valueOf(deviceAddedEventProto.getType().name()))
                 .build();
     }
 
     @Override
-    public HubEventType getMessageType() {
-        return HubEventType.DEVICE_ADDED;
+    public HubEventProto.PayloadCase getMessageType() {
+        return HubEventProto.PayloadCase.DEVICE_ADDED;
     }
 }

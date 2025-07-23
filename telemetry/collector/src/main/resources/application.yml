@@ -1,6 +1,16 @@
 spring:
   application:
     name: collector
+  jmx:
+    enabled: true
+management:
+  endpoints:
+    jmx:
+      exposure:
+        include: "*"
+    web:
+      exposure:
+        include: health,info
 
 logging:
   level:
@@ -8,18 +18,31 @@ logging:
     org:
       springframework: ERROR
       appache.kafka: WARN
+grpc:
+  server:
+    port: 59091
 
 collector:
   kafka:
+    producers:
+      sensors:
+        properties:
+          bootstrap.servers: localhost:9092
+          client.id: "telemetry.collector.sensors"
+          key.serializer: org.apache.kafka.common.serialization.StringSerializer
+          value.serializer: ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer
+        topics:
+        - name: sensors-events
+          value: telemetry.sensors.v1
+      hubs:
+        properties:
+          bootstrap.servers: localhost:9092
+          client.id: "telemetry.collector.hubs"
+          key.serializer: org.apache.kafka.common.serialization.StringSerializer
+          value.serializer: ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer
+        topics:
+          - name: hub-events
+            value: telemetry.hubs.v1
     producer:
       properties:
         close-time: 15
-        bootstrap.servers: localhost:9092
-        client.id: "telemetry.collector"
-        key.serializer: org.apache.kafka.common.serialization.StringSerializer
-        value.serializer: ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer
-      topics:
-        sensors:
-          default: telemetry.sensors.v1
-        hubs:
-          default: telemetry.hubs.v1
