@@ -1,91 +1,80 @@
 package ru.yandex.practicum.telemetry.aggregator.service.client;
 
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.common.KafkaException;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.telemetry.aggregator.config.KafkaConfig;
-
-import java.time.Duration;
+import ru.yandex.practicum.telemetry.aggregator.manager.KafkaConsumerManagerImpl;
+import ru.yandex.practicum.telemetry.aggregator.manager.KafkaProducerManagerImpl;
+import ru.yandex.practicum.telemetry.aggregator.service.util.KafkaConsumerFactory;
+import ru.yandex.practicum.telemetry.aggregator.service.util.KafkaProducerFactory;
+import ru.yandex.practicum.telemetry.aggregator.config.TopicConfig;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+@Getter
 @Component
 @Slf4j
-@RequiredArgsConstructor
+@ManagedResource(objectName = "ru.yandex.practicum.telemetry.aggregator:type=Kafka,name=KafkaEventConsumerManager",
+        description = "Kafka Event Consumers Management")
 public class AggregatorClient implements Client {
-    private final KafkaConfig config;
-    private Producer<String, SpecificRecordBase> producer;
-    private Consumer<String, SpecificRecordBase> consumer;
-    @Value("${aggregator.kafka.producer.properties.close-time}")
-    private int closeProducerTime;
-    @Value("${aggregator.kafka.consumer.properties.close-time}")
-    private int closeConsumerTime;
-    private volatile String producerStatus = "RUNNING";
-    private volatile String consumerStatus= "RUNNING";
+    private final Map<String, Map<String, String>> topicsMapping;
+    private final KafkaProducerManagerImpl producerManager;
+    private final KafkaConsumerManagerImpl consumerManager;
 
-    @Override
-    public Producer<String, SpecificRecordBase> getProducer() {
-        if (producer == null) {
-            initProducer();
-        }
-        return producer;
+    public AggregatorClient(KafkaConfig config, KafkaProducerFactory producerFactory, KafkaConsumerFactory consumerFactory) {
+        this.topicsMapping = new ConcurrentHashMap<>();
+
+        config.getProducers().forEach((producerName, producerConfig) -> {
+            Map<String, String> topics = producerConfig.getTopics().stream()
+                    .collect(Collectors.toMap(
+                            TopicConfig::getName,
+                            TopicConfig::getValue));
+            topicsMapping.put(producerName, topics);
+        });
+
+        config.getConsumers().forEach((consumerName, consumerConfig) -> {
+            Map<String, String> topics = consumerConfig.getTopics().stream()
+                    .collect(Collectors.toMap(
+                            TopicConfig::getName,
+                            TopicConfig::getValue));
+            topicsMapping.put(consumerName, topics);
+        });
+
+        this.producerManager = new KafkaProducerManagerImpl(config, producerFactory);
+        this.consumerManager = new KafkaConsumerManagerImpl(config, consumerFactory);
     }
 
     @Override
-    public Map<String, String> getProducerTopics() {
-        return config.getProducer().getTopics();
+    public Producer<String, SpecificRecordBase> getProducer(String producerName) {
+        return producerManager.getActiveProducer(producerName);
     }
 
     @Override
-    public Consumer<String, SpecificRecordBase> getConsumer() {
-        if (consumer == null) {
-            initConsumer();
-        }
-        return consumer;
+    public Map<String, String> getProducerTopics(String producerName) {
+        Map<String, String> topicMap = topicsMapping.get(producerName);
+
+        return topicsMapping.get(producerName);
     }
 
     @Override
-    public Map<String, String> getConsumerTopics() {
-        return config.getConsumer().getTopics();
+    public Consumer<String, SpecificRecordBase> getConsumer(String consumerName) {
+        return consumerManager.getActiveConsumer(consumerName);
     }
 
     @Override
-    public void stop() {
-        if (producer != null) {
-            try {
-                log.info("Initiating controlled Kafka producer shutdown");
-                producer.flush();
-                producer.close(Duration.ofSeconds(closeProducerTime));
-                producerStatus = "SHUTDOWN_COMPLETE";
-            } catch (KafkaException exception) {
-                producerStatus = "SHUTDOWN_FAILED";
-                log.error("Failed to close Kafka producer: {}", exception.getMessage(), exception);
-            }
-        }
-        if (consumer != null) {
-            try {
-                log.info("Initiating controlled Kafka producer shutdown");
-                consumer.unsubscribe();
-                consumer.close(Duration.ofSeconds(closeConsumerTime));
-                consumerStatus = "SHUTDOWN_COMPLETE";
-            } catch (KafkaException exception) {
-                consumerStatus = "SHUTDOWN_FAILED";
-                log.error("Failed to close Kafka producer: {}", exception.getMessage(), exception);
-            }
-        }
+    public Map<String, String> getConsumerTopics(String consumerName) {
+        return topicsMapping.get(consumerName);
     }
 
-    private void initProducer() {
-        producer = new KafkaProducer<>(config.getProducer().getProperties());
-    }
-
-    private void initConsumer() {
-        consumer = new KafkaConsumer<>(config.getConsumer().getProperties());
+    @Override
+    public void closeConsumerAndProducer(String consumerName, String producerName) {
+        consumerManager.closeConsumer(consumerName);
+        producerManager.closeProducer(producerName);
     }
 }

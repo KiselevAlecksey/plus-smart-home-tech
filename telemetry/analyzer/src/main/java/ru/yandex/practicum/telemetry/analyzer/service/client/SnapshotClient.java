@@ -6,10 +6,12 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.telemetry.analyzer.config.KafkaConfig;
+import ru.yandex.practicum.telemetry.analyzer.config.TopicConfig;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 @Component("snapshotClient")
 @RequiredArgsConstructor
@@ -28,7 +30,11 @@ public class SnapshotClient implements Client {
 
     @Override
     public Map<String, String> getTopics() {
-        return config.getConsumers().get(CONSUMER_SNAPSHOT_NAME).getTopics();
+        return config.getConsumers().get(CONSUMER_SNAPSHOT_NAME).getTopics().stream()
+                .collect(Collectors.toMap(
+                        TopicConfig::getName,
+                        TopicConfig::getValue
+                ));
     }
 
     @Override
@@ -40,10 +46,18 @@ public class SnapshotClient implements Client {
 
     @Override
     public List<String> getAllTopics() {
-        return new ArrayList<>(config.getConsumers().get(CONSUMER_SNAPSHOT_NAME).getTopics().values());
+        return config.getConsumers().get(CONSUMER_SNAPSHOT_NAME)
+                .getTopics()
+                .stream()
+                .map(TopicConfig::getValue)
+                .collect(Collectors.toList());
     }
 
     private void init() {
-        consumer = new KafkaConsumer<>(config.getConsumers().get(CONSUMER_SNAPSHOT_NAME).getProperties());
+        Map<String, String> configMap = config.getConsumers().get(CONSUMER_SNAPSHOT_NAME).getProperties();
+        Properties props = new Properties();
+        props.putAll(configMap);
+
+        consumer = new KafkaConsumer<>(props);
     }
 }

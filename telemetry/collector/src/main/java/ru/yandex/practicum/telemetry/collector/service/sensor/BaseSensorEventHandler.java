@@ -13,6 +13,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> implements SensorEventHandler {
     protected final KafkaEventProducer producer;
+    private static final String SENSOR_PRODUCER_NAME = "sensors";
 
     protected abstract T toAvro(SensorEventProto event);
 
@@ -37,6 +38,10 @@ public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> imple
                 .setPayload(payload)
                 .build();
 
-        producer.sendSensorEvent(sensorEventAvro);
+        sendSensorEvent(sensorEventAvro);
+    }
+
+    private void sendSensorEvent(SensorEventAvro event) {
+        producer.sendEvent(SENSOR_PRODUCER_NAME, event);
     }
 }

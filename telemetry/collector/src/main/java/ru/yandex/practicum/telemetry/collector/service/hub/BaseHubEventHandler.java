@@ -13,6 +13,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implements HubEventHandler {
     protected final KafkaEventProducer producer;
+    private static final String HUB_PRODUCER_NAME = "hubs";
 
     protected abstract T toAvro(HubEventProto event);
 
@@ -38,6 +39,10 @@ public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implemen
 
         log.warn("==> avro {}", eventAvro);
 
-        producer.sendHubEvent(eventAvro);
+        sendHubEvent(eventAvro);
+    }
+
+    private void sendHubEvent(HubEventAvro event) {
+        producer.sendEvent(HUB_PRODUCER_NAME, event);
     }
 }

@@ -1,8 +1,11 @@
 package ru.yandex.practicum.telemetry.collector.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +21,7 @@ import ru.yandex.practicum.telemetry.collector.cofiguration.TopicConfig;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,8 +38,6 @@ public class KafkaEventProducer {
 
     @Value("${collector.kafka.producer.properties.close-time}")
     private int closeTime;
-    private static final String HUB_PRODUCER_NAME = "hubs";
-    private static final String SENSOR_PRODUCER_NAME = "sensors";
 
     private volatile String status = "RUNNING";
 
@@ -86,14 +88,6 @@ public class KafkaEventProducer {
 
         String defaultTopic = topics.keySet().iterator().next();
         sendEvent(producerName, defaultTopic, event);
-    }
-
-    public void sendHubEvent(HubEventAvro event) {
-        sendEvent(HUB_PRODUCER_NAME, event);
-    }
-
-    public void sendSensorEvent(SensorEventAvro event) {
-        sendEvent(SENSOR_PRODUCER_NAME, event);
     }
 
     @ManagedOperation(description = "Gracefully shutdown Kafka producers")
@@ -153,5 +147,55 @@ public class KafkaEventProducer {
     public void setCloseTimeout(int seconds) {
         this.closeTime = seconds;
         log.info("Updated close timeout to {} seconds", seconds);
+    }
+
+    @ManagedOperation(description = "Register a new Kafka producer dynamically")
+    public String registerProducerViaJMX(
+            String producerName,
+            String bootstrapServers,
+            String keySerializer,
+            String valueSerializer,
+            String topicsJson
+    ) {
+        try {
+            Properties props = new Properties();
+            props.put("bootstrap.servers", bootstrapServers);
+            props.put("key.serializer", keySerializer);
+            props.put("value.serializer", valueSerializer);
+
+            Map<String, String> topics = new ObjectMapper().readValue(topicsJson, new TypeReference<>() {});
+            registerProducer(producerName, props, topics);
+            return "Producer registered successfully: " + producerName;
+        } catch (Exception e) {
+            log.error("Failed to register producer via JMX", e);
+            return "Error: " + e.getMessage();
+        }
+    }
+
+    public void registerProducer(
+            String producerName,
+            Properties properties,
+            Map<String, String> topics
+    ) {
+        if (producerName == null || producerName.isBlank()) {
+            throw new IllegalArgumentException("Producer name cannot be null or empty");
+        }
+        if (properties == null) {
+            throw new IllegalArgumentException("Properties cannot be null");
+        }
+        if (topics == null || topics.isEmpty()) {
+            throw new IllegalArgumentException("Topics mapping cannot be null or empty");
+        }
+
+        Producer<String, SpecificRecordBase> existingProducer = producers.get(producerName);
+        if (existingProducer != null) {
+            closeProducer(producerName, existingProducer);
+        }
+
+        Producer<String, SpecificRecordBase> newProducer = new KafkaProducer<>(properties);
+        producers.put(producerName, newProducer);
+        topicsMapping.put(producerName, new ConcurrentHashMap<>(topics));
+
+        log.info("Registered new Kafka producer: {}", producerName);
     }
 }

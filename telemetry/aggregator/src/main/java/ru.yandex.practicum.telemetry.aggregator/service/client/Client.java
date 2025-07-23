@@ -7,13 +7,13 @@ import org.apache.kafka.clients.producer.Producer;
 import java.util.Map;
 
 public interface Client {
-    Producer<String, SpecificRecordBase> getProducer();
+    Producer<String, SpecificRecordBase> getProducer(String producerName);
 
-    Map<String, String> getProducerTopics();
+    Map<String, String> getProducerTopics(String producerName);
 
-    Consumer<String, SpecificRecordBase> getConsumer();
+    Consumer<String, SpecificRecordBase> getConsumer(String consumerName);
 
-    Map<String, String> getConsumerTopics();
+    Map<String, String> getConsumerTopics(String consumerName);
 
-    void stop();
+    public void closeConsumerAndProducer(String consumerName, String producerName);
 }

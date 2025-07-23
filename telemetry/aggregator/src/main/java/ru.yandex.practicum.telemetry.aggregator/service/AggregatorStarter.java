@@ -29,18 +29,21 @@ import java.util.Optional;
 public class AggregatorStarter {
     private static final Duration CONSUME_ATTEMPT_TIMEOUT = Duration.ofMillis(100);
     private static final int AMOUNT_PART_COMMIT = 10;
+    private static final String CONSUMER_NAME = "sensors2";
+    private static final String PRODUCER_NAME = "sensors1";
+    public static final String SENSORS_EVENTS = "sensors-events";
+    public static final String SENSORS_SNAPSHOTS = "sensors-snapshots";
 
     private final AggregatorClient client;
-    private final KafkaConfig config;
     private final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>();
     private final Map<String, SensorsSnapshotAvro> snapshots = new HashMap<>();
 
     public void start() {
-        Runtime.getRuntime().addShutdownHook(new Thread(client.getConsumer()::wakeup));
+        Runtime.getRuntime().addShutdownHook(new Thread(client.getConsumer(CONSUMER_NAME)::wakeup));
         try {
             consumerSubscribe();
             while (true) {
-                ConsumerRecords<String, SpecificRecordBase> records = client.getConsumer().poll(CONSUME_ATTEMPT_TIMEOUT);
+                ConsumerRecords<String, SpecificRecordBase> records = client.getConsumer(CONSUMER_NAME).poll(CONSUME_ATTEMPT_TIMEOUT);
                 int count = 0;
                 for (ConsumerRecord<String, SpecificRecordBase> record : records) {
                     log.info("{}", record);
@@ -51,27 +54,31 @@ public class AggregatorStarter {
                         sendProducerEvent(s);
                         log.info("{}", s);
                     });
-                    manageOffsets(record, count, client.getConsumer());
+                    manageOffsets(record, count, client.getConsumer(CONSUMER_NAME));
                 }
-                client.getConsumer().commitAsync();
+                client.getConsumer(CONSUMER_NAME).commitAsync();
             }
         } catch (WakeupException ignored) {
         } finally {
             try {
-                client.getConsumer().commitSync(currentOffsets);
+                client.getConsumer(CONSUMER_NAME).commitSync(currentOffsets);
             } finally {
                 log.info("Закрываем продюсер и консьюмер");
-                client.stop();
+                client.closeConsumerAndProducer(CONSUMER_NAME, PRODUCER_NAME);
             }
         }
     }
 
     private void sendProducerEvent(SensorsSnapshotAvro event) {
-        client.getProducer().send(new ProducerRecord<>(client.getProducerTopics().get("sensors-snapshots"), event));
+
+        String topic = client.getProducerTopics(PRODUCER_NAME).get(SENSORS_SNAPSHOTS);
+        client.getProducer(PRODUCER_NAME)
+                .send(new ProducerRecord<>(topic, event));
     }
 
     private void consumerSubscribe() {
-        client.getConsumer().subscribe(List.of(config.getConsumer().getTopics().get("sensors-events")));
+        client.getConsumer(CONSUMER_NAME)
+                .subscribe(List.of(client.getConsumerTopics(CONSUMER_NAME).get(SENSORS_EVENTS)));
     }
 
     private void manageOffsets(

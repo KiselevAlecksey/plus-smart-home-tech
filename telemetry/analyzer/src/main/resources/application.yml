@@ -36,7 +36,8 @@ analyzer:
           value.deserializer: ru.yandex.practicum.kafka.serializer.SensorsSnapshotDeserializer
           enable.auto.commit: false
         topics:
-          sensors-snapshots: telemetry.snapshots.v1
+          - name: sensors-snapshots
+            value: telemetry.snapshots.v1
       hubs:
         properties:
           group.id: "analyzer-hub-client"
@@ -46,7 +47,8 @@ analyzer:
           value.deserializer: ru.yandex.practicum.kafka.serializer.HubEventDeserializer
           enable.auto.commit: false
         topics:
-          hubs-events: telemetry.hubs.v1
+          - name: hubs-events
+            value: telemetry.hubs.v1
 
 grpc:
   client:
