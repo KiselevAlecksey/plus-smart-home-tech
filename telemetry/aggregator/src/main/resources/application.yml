@@ -1,37 +1,12 @@
 spring:
   application:
     name: aggregator
+  config:
+    import: config-server:http://localhost:8888
 
-logging:
-  level:
-    ru.yandex.practicum.telemetry: TRACE
-    org:
-      springframework: ERROR
-      appache.kafka: WARN
-
-aggregator:
-  kafka:
-    producers:
-      sensors1:
-        properties:
-          bootstrap.servers: localhost:9092
-          client.id: "telemetry.aggregator"
-          key.serializer: org.apache.kafka.common.serialization.StringSerializer
-          value.serializer: ru.yandex.practicum.kafka.serializer.GeneralAvroSerializer
-          close-time: 15
-        topics:
-          - name: sensors-snapshots
-            value: telemetry.snapshots.v1
-    consumers:
-      sensors2:
-        properties:
-          group.id: "aggregator-client"
-          bootstrap.servers: localhost:9092
-          client.id: "telemetry.aggregator"
-          key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-          value.deserializer: ru.yandex.practicum.kafka.serializer.SensorEventDeserializer
-          enable-auto-commit: false
-          close-time: 15
-        topics:
-          - name: sensors-events
-            value: telemetry.sensors.v1
+cloud:
+  config:
+    fail-fast: true
+    retry:
+      useRandomPolicy: true
+      max-interval: 6000
