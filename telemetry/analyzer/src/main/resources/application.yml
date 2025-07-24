@@ -1,59 +1,12 @@
 spring:
   application:
     name: analyzer
-  jpa:
-    hibernate.ddl-auto: none
-    properties.hibernate.format_sql: true
-  sql.init.mode: always
-  datasource:
-    driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/analyzer
-    username: password
-    password: password
+  config:
+    import: config-server:http://localhost:8888
 
-logging:
-  level:
-    org:
-      hibernate.orm.jdbc.bind: TRACE
-      hibernate.SQL: TRACE
-      springframework:
-        orm:
-          jpa: INFO
-          jpa.JpaTransactionManager: DEBUG
-        transaction: INFO
-        transaction.interceptor: TRACE
-        web.filter.CommonsRequestLoggingFilter: DEBUG
-
-analyzer:
-  kafka:
-    consumers:
-      snapshots:
-        properties:
-          group.id: "analyzer-snapshot-client"
-          bootstrap.servers: localhost:9092
-          client.id: "telemetry.analyzer.snapshot"
-          key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-          value.deserializer: ru.yandex.practicum.kafka.serializer.SensorsSnapshotDeserializer
-          enable.auto.commit: false
-        topics:
-          - name: sensors-snapshots
-            value: telemetry.snapshots.v1
-      hubs:
-        properties:
-          group.id: "analyzer-hub-client"
-          bootstrap.servers: localhost:9092
-          client.id: "telemetry.analyzer.hub"
-          key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-          value.deserializer: ru.yandex.practicum.kafka.serializer.HubEventDeserializer
-          enable.auto.commit: false
-        topics:
-          - name: hubs-events
-            value: telemetry.hubs.v1
-
-grpc:
-  client:
-    hub-router:
-      address: 'static://localhost:59090'
-      enableKeepAlive: true
-      keepAliveWithoutCalls: true
-      negotiationType: plaintext
+cloud:
+  config:
+    fail-fast: true
+    retry:
+      useRandomPolicy: true
+      max-interval: 6000
