@@ -1,15 +1,15 @@
-package ru.yandex.practicum.telemetry.discoveryserver;
+package ru.yandex.practicum.commerce.warehouse;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
-@EnableEurekaServer
+@EnableFeignClients
 @ConfigurationPropertiesScan
-public class DiscoveryServer {
+public class WarehouseApp {
     public static void main(String[] args) {
-        SpringApplication.run(DiscoveryServer.class, args);
+        SpringApplication.run(WarehouseApp.class, args);
     }
 }
