@@ -30,10 +30,7 @@ public class ShoppingCart {
     @Column(name = "state", nullable = false)
     private ShoppingCartState state;
 
-    @OneToMany(mappedBy = "shoppingCart",
-            fetch = FetchType.EAGER,
-            cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    private Set<CartProduct> products = new HashSet<>();
+    @OneToMany(mappedBy = "shoppingCart", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CartProduct> products;
 }
 

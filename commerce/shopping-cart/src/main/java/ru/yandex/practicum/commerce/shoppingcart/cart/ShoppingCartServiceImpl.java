@@ -18,13 +18,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ShoppingCartServiceImpl implements ShoppingCartService {
     final ShoppingCartRepository cartRepository;
     final ShoppingCartMapper cartMapper;
-    final ProductMapper productMapper;
     final WarehouseFeignClient warehouseClient;
 
     @Override
@@ -43,13 +42,13 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     @Override
-    @Transactional
     public ShoppingCartResponseDto addProductsToShoppingCart(String userName, Map<UUID, Long> products) {
         ShoppingCart cart = cartRepository.findByUserName(userName)
                 .orElseGet(() -> {
                     ShoppingCart newCart = ShoppingCart.builder()
                             .userName(userName)
                             .state(ShoppingCartState.ACTIVE)
+                            .products(new HashSet<>())
                             .build();
                     return cartRepository.save(newCart);
                 });
@@ -63,11 +62,29 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         warehouseClient.checkProductQuantityForShoppingCart(requestDto);
 
-        cart.getProducts().addAll(requestDto.products().stream()
-                .map(productMapper::toEntityProduct)
-                .peek(cartProduct -> cartProduct.setShoppingCart(cart))
-                .collect(Collectors.toSet()));
+        products.forEach((productId, quantity) -> {
+            Optional<CartProduct> existingProduct = cart.getProducts().stream()
+                    .filter(cp -> cp.getProductId().equals(productId))
+                    .findFirst();
+            if (existingProduct.isPresent()) {
+                CartProduct cp = existingProduct.get();
+                cp.setQuantity(cp.getQuantity() + quantity);
+            } else {
+                CartProduct newCartProduct = new CartProduct();
+                newCartProduct.setShoppingCart(cart);
 
+                newCartProduct.setProductId(productId);
+
+                newCartProduct.setQuantity(quantity);
+                cart.getProducts().add(newCartProduct);
+            }
+        });
+
+        return transactionalSaveCart(cart);
+    }
+
+    @Transactional
+    private ShoppingCartResponseDto transactionalSaveCart(ShoppingCart cart) {
         ShoppingCart savedCart = cartRepository.save(cart);
         return cartMapper.toResponseDto(savedCart);
     }
@@ -87,7 +104,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     @Override
-    @Transactional
     public ShoppingCartResponseDto removeShoppingCartProducts(String userName, Set<UUID> products) {
         ShoppingCart cart = cartRepository.findByUserName(userName)
                 .orElseThrow(() -> ShoppingCartNotFoundException.builder()
@@ -99,12 +115,10 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         cart.getProducts().removeIf(product -> products.contains(product.getProductId()));
 
-        ShoppingCart savedCart = cartRepository.save(cart);
-        return cartMapper.toResponseDto(savedCart);
+        return transactionalSaveCart(cart);
     }
 
     @Override
-    @Transactional
     public ShoppingCartResponseDto changeProductQuantity(String userName, ProductQuantityDto changeQuantity) {
         ShoppingCart cart = cartRepository.findByUserName(userName)
                 .orElseThrow(() -> ShoppingCartNotFoundException.builder()
@@ -126,7 +140,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         product.setQuantity(changeQuantity.newQuantity());
 
-        ShoppingCart savedCart = cartRepository.save(cart);
-        return cartMapper.toResponseDto(savedCart);
+        return transactionalSaveCart(cart);
     }
 }

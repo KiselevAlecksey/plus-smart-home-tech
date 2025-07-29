@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import ru.yandex.practicum.commerce.shoppingcart.cart.ShoppingCart;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -25,4 +26,17 @@ public class CartProduct {
 
     @Column(name = "quantity", nullable = false)
     private Long quantity;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CartProduct that = (CartProduct) o;
+        return Objects.equals(productId, that.productId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(productId);
+    }
 }

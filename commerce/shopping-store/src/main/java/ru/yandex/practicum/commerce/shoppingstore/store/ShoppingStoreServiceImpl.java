@@ -22,8 +22,8 @@ import ru.yandex.practicum.commerce.shoppingstore.product.ProductMapper;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ShoppingStoreServiceImpl implements ShoppingStoreService {
 
@@ -32,7 +32,6 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     final ProductMapper productMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public Page<ProductFullResponseDto> getProductsCategorySort(ProductCategory category, Pageable pageable) {
         return productRepository.findByProductCategory(category, pageable)
                 .map(productMapper::toResponseDto);

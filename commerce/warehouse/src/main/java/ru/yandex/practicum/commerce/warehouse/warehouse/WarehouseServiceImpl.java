@@ -40,7 +40,6 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public BookedProductsDto checkProductQuantityForShoppingCart(ShoppingCartRequestDto request) {
         BookedProductsDto bookedProductsDto = BookedProductsDto.builder()
                 .deliveryWeight(0.0)
