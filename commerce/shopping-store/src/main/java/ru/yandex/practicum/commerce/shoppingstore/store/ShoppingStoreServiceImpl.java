@@ -8,16 +8,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductFullResponseDto;
 import ru.yandex.practicum.commerce.interactionapi.exception.ProductNotFoundException;
 import ru.yandex.practicum.commerce.shoppingstore.product.Product;
 import ru.yandex.practicum.commerce.shoppingstore.product.ProductRepository;
-import ru.yandex.practicum.commerce.shoppingstore.product.enums.ProductState;
-import ru.yandex.practicum.commerce.shoppingstore.product.dto.ProductCreateDto;
-import ru.yandex.practicum.commerce.shoppingstore.product.dto.ProductQuantityStateRequest;
-import ru.yandex.practicum.commerce.shoppingstore.product.dto.ProductResponseDto;
-import ru.yandex.practicum.commerce.shoppingstore.product.dto.ProductUpdateDto;
-import ru.yandex.practicum.commerce.shoppingstore.product.enums.ProductCategory;
-import ru.yandex.practicum.commerce.shoppingstore.product.mapper.ProductMapper;
+import ru.yandex.practicum.commerce.interactionapi.enums.ProductState;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductCreateDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityStateRequest;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductUpdateDto;
+import ru.yandex.practicum.commerce.interactionapi.enums.ProductCategory;
+import ru.yandex.practicum.commerce.shoppingstore.product.ProductMapper;
 
 import java.util.UUID;
 
@@ -32,21 +32,22 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     final ProductMapper productMapper;
 
     @Override
-    public Page<ProductResponseDto> getProductsCategorySort(ProductCategory category, Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<ProductFullResponseDto> getProductsCategorySort(ProductCategory category, Pageable pageable) {
         return productRepository.findByProductCategory(category, pageable)
                 .map(productMapper::toResponseDto);
     }
 
     @Override
     @Transactional
-    public ProductResponseDto createProduct(ProductCreateDto createDto) {
+    public ProductFullResponseDto createProduct(ProductCreateDto createDto) {
         Product product = productMapper.toEntityFromCreate(createDto);
         return productMapper.toResponseDto(productRepository.save(product));
     }
 
     @Override
     @Transactional
-    public ProductResponseDto updateProduct(ProductUpdateDto updateDto) {
+    public ProductFullResponseDto updateProduct(ProductUpdateDto updateDto) {
         Product product = productRepository.findById(updateDto.productId())
                 .orElseThrow(() -> ProductNotFoundException.builder()
                         .message("Ошибка при поиске продукта")
@@ -93,7 +94,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     }
 
     @Override
-    public ProductResponseDto getByProductId(String productId) {
+    public ProductFullResponseDto getByProductId(String productId) {
         try {
             return productRepository.findById(UUID.fromString(productId))
                     .map(productMapper::toResponseDto)

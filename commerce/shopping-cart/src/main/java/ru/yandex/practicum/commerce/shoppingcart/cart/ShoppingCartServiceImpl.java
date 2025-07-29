@@ -6,13 +6,16 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.commerce.interactionapi.dto.ProductQuantityDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.ShoppingCartResponseDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.*;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityDto;
 import ru.yandex.practicum.commerce.interactionapi.exception.ProductNotFoundException;
 import ru.yandex.practicum.commerce.interactionapi.exception.ShoppingCartNotFoundException;
+import ru.yandex.practicum.commerce.interactionapi.feign.WarehouseFeignClient;
 import ru.yandex.practicum.commerce.shoppingcart.cart.product.CartProduct;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +25,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     final ShoppingCartRepository cartRepository;
     final ShoppingCartMapper cartMapper;
     final ProductMapper productMapper;
-    final ProductRepository productRepository;
+    final WarehouseFeignClient warehouseClient;
 
     @Override
     @Transactional
@@ -47,36 +50,23 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                     ShoppingCart newCart = ShoppingCart.builder()
                             .userName(userName)
                             .state(ShoppingCartState.ACTIVE)
-                            .products(new HashSet<>())
                             .build();
                     return cartRepository.save(newCart);
                 });
 
-        products.forEach((productId, quantity) -> {
-            CartProduct product = productRepository.findById(productId)
-                    .orElseThrow(() -> ProductNotFoundException.builder()
-                            .message("Ошибка при поиске продукта")
-                            .userMessage("Продукт не найден. Пожалуйста, проверьте идентификатор")
-                            .httpStatus(HttpStatus.NOT_FOUND)
-                            .cause(new RuntimeException("Продукт с ID " + productId + " не найден"))
-                            .build());
+        ShoppingCartRequestDto requestDto = ShoppingCartRequestDto.builder()
+                .shoppingCartId(cart.getShoppingCartId())
+                .products(products.entrySet().stream()
+                        .map(entry -> new ProductDto(entry.getKey(), entry.getValue()))
+                        .collect(Collectors.toSet()))
+                .build();
 
-            Optional<CartProduct> existingProduct = cart.getProducts().stream()
-                    .filter(p -> p.getProductId().equals(productId))
-                    .findFirst();
+        warehouseClient.checkProductQuantityForShoppingCart(requestDto);
 
-            if (existingProduct.isPresent()) {
-                CartProduct cartProduct = existingProduct.get();
-                cartProduct.setQuantity(cartProduct.getQuantity() + quantity);
-            } else {
-                CartProduct cartProduct = CartProduct.builder()
-                        .productId(productId)
-                        .shoppingCart(cart)
-                        .quantity(quantity)
-                        .build();
-                cart.getProducts().add(cartProduct);
-            }
-        });
+        cart.getProducts().addAll(requestDto.products().stream()
+                .map(productMapper::toEntityProduct)
+                .peek(cartProduct -> cartProduct.setShoppingCart(cart))
+                .collect(Collectors.toSet()));
 
         ShoppingCart savedCart = cartRepository.save(cart);
         return cartMapper.toResponseDto(savedCart);

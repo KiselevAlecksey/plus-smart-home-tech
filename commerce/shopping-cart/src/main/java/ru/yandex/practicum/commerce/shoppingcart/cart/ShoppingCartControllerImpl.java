@@ -6,8 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.commerce.interactionapi.dto.ProductQuantityDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.ShoppingCartResponseDto;
+import ru.yandex.practicum.commerce.interactionapi.feign.ShoppingCartController;
 
 
 import java.util.Map;
@@ -19,9 +20,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping(path = "/api/v1/shopping-cart")
 @RequiredArgsConstructor
-public class ShoppingCartController {
+public class ShoppingCartControllerImpl implements ShoppingCartController {
     private final ShoppingCartService shoppingCartService;
 
+    @Override
     @GetMapping
     public ShoppingCartResponseDto getShoppingCartByUserName(
             @RequestParam(value = "username") @NotBlank String userName) {
@@ -31,6 +33,7 @@ public class ShoppingCartController {
         return dto;
     }
 
+    @Override
     @PutMapping
     public ShoppingCartResponseDto addProductsToShoppingCart(
             @RequestParam(value = "username") @NotBlank String userName,
@@ -46,6 +49,7 @@ public class ShoppingCartController {
         return dto;
     }
 
+    @Override
     @DeleteMapping
     public void removeShoppingCart(@RequestParam(value = "username") @NotBlank String userName) {
         log.info("==> Remove shoppingCart by username {} start", userName);
@@ -53,6 +57,7 @@ public class ShoppingCartController {
         log.info("<== Remove shoppingCart by username {} end", userName);
     }
 
+    @Override
     @PostMapping("/remove")
     public ShoppingCartResponseDto removeShoppingCartProducts(
             @RequestParam(value = "username") @NotBlank String userName,
@@ -63,6 +68,7 @@ public class ShoppingCartController {
         return dto;
     }
 
+    @Override
     @PostMapping("/change-quantity")
     public ShoppingCartResponseDto changeProductQuantity(
             @RequestParam(value = "username") @NotBlank String userName,

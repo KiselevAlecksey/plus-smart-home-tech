@@ -2,9 +2,9 @@ package ru.yandex.practicum.commerce.shoppingstore.product;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ru.yandex.practicum.commerce.shoppingstore.product.enums.ProductCategory;
-import ru.yandex.practicum.commerce.shoppingstore.product.enums.ProductState;
-import ru.yandex.practicum.commerce.shoppingstore.product.enums.QuantityState;
+import ru.yandex.practicum.commerce.interactionapi.enums.ProductCategory;
+import ru.yandex.practicum.commerce.interactionapi.enums.ProductState;
+import ru.yandex.practicum.commerce.interactionapi.enums.QuantityState;
 
 import java.math.BigDecimal;
 import java.util.UUID;

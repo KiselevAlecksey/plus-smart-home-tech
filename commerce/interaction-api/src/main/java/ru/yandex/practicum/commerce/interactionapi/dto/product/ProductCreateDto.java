@@ -1,18 +1,16 @@
-package ru.yandex.practicum.commerce.shoppingstore.product.dto;
+package ru.yandex.practicum.commerce.interactionapi.dto.product;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import ru.yandex.practicum.commerce.shoppingstore.product.enums.ProductCategory;
-import ru.yandex.practicum.commerce.shoppingstore.product.enums.ProductState;
-import ru.yandex.practicum.commerce.shoppingstore.product.enums.QuantityState;
+import ru.yandex.practicum.commerce.interactionapi.enums.ProductCategory;
+import ru.yandex.practicum.commerce.interactionapi.enums.ProductState;
+import ru.yandex.practicum.commerce.interactionapi.enums.QuantityState;
 
 import java.math.BigDecimal;
 
-@Schema(description = "Создание нового товара в ассортименте")
 public record ProductCreateDto(
 
     @NotBlank

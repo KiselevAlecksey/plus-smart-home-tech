@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
-@EnableFeignClients
+@EnableFeignClients(basePackages = "ru.yandex.practicum.commerce.interactionapi.feign")
 @ConfigurationPropertiesScan
 public class ShoppingStoreApp {
     public static void main(String[] args) {

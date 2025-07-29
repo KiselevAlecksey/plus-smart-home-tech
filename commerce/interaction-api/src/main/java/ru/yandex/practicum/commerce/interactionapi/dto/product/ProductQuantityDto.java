@@ -1,4 +1,4 @@
-package ru.yandex.practicum.commerce.interactionapi.dto;
+package ru.yandex.practicum.commerce.interactionapi.dto.product;
 
 import jakarta.validation.constraints.NotNull;
 

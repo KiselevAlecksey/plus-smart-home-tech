@@ -1,6 +1,7 @@
-package ru.yandex.practicum.commerce.warehouse.dto;
+package ru.yandex.practicum.commerce.interactionapi.dto.warehouse;
 
 import jakarta.validation.constraints.Min;
+import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.DimensionDto;
 
 import java.util.UUID;
 

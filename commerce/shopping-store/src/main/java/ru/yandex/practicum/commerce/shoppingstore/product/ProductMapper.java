@@ -1,7 +1,7 @@
-package ru.yandex.practicum.commerce.shoppingstore.product.mapper;
+package ru.yandex.practicum.commerce.shoppingstore.product;
 
 import org.mapstruct.*;
-import ru.yandex.practicum.commerce.shoppingstore.product.dto.*;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.*;
 import ru.yandex.practicum.commerce.shoppingstore.product.Product;
 
 @Mapper(componentModel = "spring")
@@ -15,7 +15,7 @@ public interface ProductMapper {
     @Mapping(target = "productState", source = "productState")
     @Mapping(target = "productCategory", source = "productCategory")
     @Mapping(target = "price", source = "price")
-    ProductResponseDto toResponseDto(Product product);
+    ProductFullResponseDto toResponseDto(Product product);
 
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "productName", source = "productName")
@@ -25,7 +25,7 @@ public interface ProductMapper {
     @Mapping(target = "productState", source = "productState")
     @Mapping(target = "productCategory", source = "productCategory")
     @Mapping(target = "price", source = "price")
-    Product toEntity(ProductDto dto);
+    Product toEntity(ProductFullDto dto);
 
     @Mapping(target = "productId", ignore = true)
     @Mapping(target = "productName", source = "productName")

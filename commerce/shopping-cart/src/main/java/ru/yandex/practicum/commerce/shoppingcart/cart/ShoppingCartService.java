@@ -1,7 +1,7 @@
 package ru.yandex.practicum.commerce.shoppingcart.cart;
 
 
-import ru.yandex.practicum.commerce.interactionapi.dto.ProductQuantityDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.ShoppingCartResponseDto;
 
 import java.util.Map;

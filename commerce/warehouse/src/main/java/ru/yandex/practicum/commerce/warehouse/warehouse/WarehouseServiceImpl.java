@@ -3,27 +3,36 @@ package ru.yandex.practicum.commerce.warehouse.warehouse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.interactionapi.dto.ShoppingCartRequestDto;
 import ru.yandex.practicum.commerce.interactionapi.exception.ProductInShoppingCartLowQuantityInWarehouse;
 import ru.yandex.practicum.commerce.interactionapi.exception.ProductNotFoundException;
-import ru.yandex.practicum.commerce.warehouse.dto.AddProductToWarehouseRequest;
-import ru.yandex.practicum.commerce.warehouse.dto.AddressDto;
-import ru.yandex.practicum.commerce.warehouse.dto.BookedProductsDto;
-import ru.yandex.practicum.commerce.warehouse.dto.NewProductInWarehouseRequestDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.AddProductToWarehouseRequest;
+import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.AddressDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.BookedProductsDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.NewProductInWarehouseRequestDto;
 
+import java.security.SecureRandom;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class WarehouseServiceImpl implements WarehouseService {
     private final WarehouseRepository warehouseRepository;
     private final ProductInWarehouseMapper productInWarehouseMapper;
+    private static final String[] ADDRESSES =
+            new String[] {"ADDRESS_1", "ADDRESS_2"};
+    private static final String CURRENT_ADDRESS =
+            ADDRESSES[Random.from(new SecureRandom()).nextInt(0, 1)];
 
     @Override
+    @Transactional
     public void addNewProductToWarehouse(NewProductInWarehouseRequestDto request) {
         ProductInWarehouse product = productInWarehouseMapper.toEntity(request);
 
@@ -31,6 +40,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookedProductsDto checkProductQuantityForShoppingCart(ShoppingCartRequestDto request) {
         BookedProductsDto bookedProductsDto = BookedProductsDto.builder()
                 .deliveryWeight(0.0)
@@ -66,8 +76,20 @@ public class WarehouseServiceImpl implements WarehouseService {
                         .build();
             }
         });
+        return getBookedProductsDto(productsInCart, warehouseMap);
+    }
 
+    private static BookedProductsDto getBookedProductsDto(
+            Set<ProductInWarehouse> productsInCart, Map<UUID,
+            ProductInWarehouse> warehouseMap) {
         BookedProductsDto bookedProducts = productsInCart.stream()
+                .map(cartProduct -> {
+                    ProductInWarehouse warehouseProduct = warehouseMap.get(cartProduct.getProductId());
+
+                    return warehouseProduct.toBuilder()
+                            .quantity(cartProduct.getQuantity())
+                            .build();
+                })
                 .collect(Collectors.collectingAndThen(
                         Collectors.toList(),
                         products -> {
@@ -77,7 +99,8 @@ public class WarehouseServiceImpl implements WarehouseService {
 
                             for (ProductInWarehouse product : products) {
                                 totalWeight += product.getWeight() * product.getQuantity();
-                                totalVolume += product.getWidth() * product.getHeight() * product.getDepth() * product.getQuantity();
+                                totalVolume += product.getWidth() * product.getHeight()
+                                        * product.getDepth() * product.getQuantity();
                                 anyFragile = anyFragile || product.isFragile();
                             }
 
@@ -88,13 +111,12 @@ public class WarehouseServiceImpl implements WarehouseService {
                                     .build();
                         }
                 ));
-
         return bookedProducts;
     }
 
 
-
     @Override
+    @Transactional
     public void addProductInstanceToWarehouse(AddProductToWarehouseRequest request) {
         ProductInWarehouse product = warehouseRepository.findById(request.productId())
                 .orElseThrow(() -> ProductNotFoundException.builder()
@@ -111,6 +133,12 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     @Override
     public AddressDto getAddressWarehouse() {
-        return null;
+        return AddressDto.builder()
+                .country(CURRENT_ADDRESS)
+                .city(CURRENT_ADDRESS)
+                .street(CURRENT_ADDRESS)
+                .house(CURRENT_ADDRESS)
+                .flat(CURRENT_ADDRESS)
+                .build();
     }
 }

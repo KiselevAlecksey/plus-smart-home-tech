@@ -1,4 +1,4 @@
-package ru.yandex.practicum.commerce.shoppingstore.product.enums;
+package ru.yandex.practicum.commerce.interactionapi.enums;
 
 import java.util.Optional;
 

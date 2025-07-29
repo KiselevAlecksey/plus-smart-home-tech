@@ -8,12 +8,13 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.commerce.shoppingstore.product.enums.ProductCategory;
-import ru.yandex.practicum.commerce.shoppingstore.product.dto.ProductCreateDto;
-import ru.yandex.practicum.commerce.shoppingstore.product.dto.ProductQuantityStateRequest;
-import ru.yandex.practicum.commerce.shoppingstore.product.dto.ProductResponseDto;
-import ru.yandex.practicum.commerce.shoppingstore.product.dto.ProductUpdateDto;
-import ru.yandex.practicum.commerce.shoppingstore.product.enums.QuantityState;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductFullResponseDto;
+import ru.yandex.practicum.commerce.interactionapi.feign.ShoppingStoreController;
+import ru.yandex.practicum.commerce.interactionapi.enums.ProductCategory;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductCreateDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityStateRequest;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductUpdateDto;
+import ru.yandex.practicum.commerce.interactionapi.enums.QuantityState;
 
 import java.util.UUID;
 
@@ -22,40 +23,44 @@ import java.util.UUID;
 @Validated
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/v1/shopping-store")
-public class ShoppingStoreController {
+public class ShoppingStoreControllerImpl implements ShoppingStoreController {
     private final ShoppingStoreService storeService;
 
+    @Override
     @GetMapping
-    public Page<ProductResponseDto> getProductsCategorySort(
+    public Page<ProductFullResponseDto> getProductsCategorySort(
             @RequestParam String category,
-            @PageableDefault(page = 0, size = 10)  Pageable pageable) {
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
         log.info("==> Get products list category {}, pageable {} start", category, pageable);
 
         ProductCategory productCategory = ProductCategory.from(category.toUpperCase())
                 .orElseThrow(() -> new IllegalArgumentException("Не поддерживаемое состояние: " + category));
 
-        Page<ProductResponseDto> productDtos = storeService.getProductsCategorySort(productCategory, pageable);
+        Page<ProductFullResponseDto> productDtos = storeService.getProductsCategorySort(productCategory, pageable);
         log.info("<== Get products list {} end", productDtos);
         return productDtos;
     }
 
+    @Override
     @PutMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponseDto createProduct(@RequestBody @Validated ProductCreateDto createDto) {
+    public ProductFullResponseDto createProduct(@RequestBody @Validated ProductCreateDto createDto) {
         log.info("==> Create product {} start", createDto);
-        ProductResponseDto responseDto = storeService.createProduct(createDto);
+        ProductFullResponseDto responseDto = storeService.createProduct(createDto);
         log.info("==> Create product {} end", responseDto);
         return responseDto;
     }
 
+    @Override
     @PostMapping
-    public ProductResponseDto updateProduct(@RequestBody @Validated ProductUpdateDto updateDto) {
+    public ProductFullResponseDto updateProduct(@RequestBody @Validated ProductUpdateDto updateDto) {
         log.info("==> Update product {} start", updateDto);
-        ProductResponseDto responseDto = storeService.updateProduct(updateDto);
+        ProductFullResponseDto responseDto = storeService.updateProduct(updateDto);
         log.info("==> Update product {} end", updateDto);
         return responseDto;
     }
 
+    @Override
     @PostMapping("/removeProductFromStore")
     public boolean removeProductFromStore(@RequestBody UUID productId) {
         log.info("==> Update product {} start", productId);
@@ -64,6 +69,7 @@ public class ShoppingStoreController {
         return bool;
     }
 
+    @Override
     @PostMapping("/quantityState")
     public boolean setProductQuantityState(@RequestParam UUID productId, @RequestParam String quantityState) {
         log.info("==> Update product productId {}, quantityState {} start", productId, quantityState);
@@ -80,10 +86,11 @@ public class ShoppingStoreController {
         return bool;
     }
 
+    @Override
     @GetMapping("/{productId}")
-    public ProductResponseDto getByProductId(@PathVariable String productId) {
+    public ProductFullResponseDto getByProductId(@PathVariable String productId) {
         log.info("==> Update product {} start", productId);
-        ProductResponseDto responseDto = storeService.getByProductId(productId);
+        ProductFullResponseDto responseDto = storeService.getByProductId(productId);
         log.info("==> Update product {} end", responseDto);
         return responseDto;
     }
