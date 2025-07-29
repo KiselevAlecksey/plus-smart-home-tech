@@ -1,4 +1,4 @@
-package ru.yandex.practicum.telemetry.discoveryserver;
+package ru.yandex.practicum.infra.discoveryserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

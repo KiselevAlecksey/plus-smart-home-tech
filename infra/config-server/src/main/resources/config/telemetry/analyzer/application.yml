@@ -11,6 +11,9 @@ spring:
     username: password
     password: password
 
+server:
+  port: 0
+
 logging:
   level:
     org:
