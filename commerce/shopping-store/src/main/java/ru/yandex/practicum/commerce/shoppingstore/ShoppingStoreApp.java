@@ -1,15 +1,15 @@
-package ru.yandex.practicum.telemetry.configserver;
+package ru.yandex.practicum.commerce.shoppingstore;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.cloud.config.server.EnableConfigServer;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@EnableConfigServer
 @SpringBootApplication
+@EnableFeignClients(basePackages = "ru.yandex.practicum.commerce.interactionapi.feign")
 @ConfigurationPropertiesScan
-public class ConfigServer {
+public class ShoppingStoreApp {
     public static void main(String[] args) {
-        SpringApplication.run(ConfigServer.class, args);
+        SpringApplication.run(ShoppingStoreApp.class, args);
     }
 }

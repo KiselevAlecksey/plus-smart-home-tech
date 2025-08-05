@@ -2,6 +2,9 @@ spring:
   application:
     name: aggregator
 
+server:
+  port: 0
+
 logging:
   level:
     ru.yandex.practicum.telemetry: TRACE
