@@ -36,7 +36,6 @@
                     <artifactId>mapstruct</artifactId>
                 </exclusion>
             </exclusions>
-            <scope>compile</scope> <!-- или runtime, если нужны только классы -->
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>

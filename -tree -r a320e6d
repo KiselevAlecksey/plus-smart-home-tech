@@ -1,0 +1,348 @@
+[33mcommit a320e6dabda9f94a87ba4ad1b48410ffc8ac2bf5[m
+Author: Alecksey Kiselev <Kiselev.Alecksey@yandex.ru>
+Date:   Tue Aug 5 13:44:20 2025 +0300
+
+    add gateway
+
+[1mdiff --git a/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/config/FeignErrorConfig.java b/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/config/FeignErrorConfig.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..3ec4452[m
+[1m--- /dev/null[m
+[1m+++ b/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/config/FeignErrorConfig.java[m
+[36m@@ -0,0 +1,186 @@[m
+[32m+[m[32mpackage ru.yandex.practicum.commerce.interactionapi.config;[m
+[32m+[m
+[32m+[m[32mimport com.fasterxml.jackson.core.JsonGenerator;[m
+[32m+[m[32mimport com.fasterxml.jackson.core.JsonParser;[m
+[32m+[m[32mimport com.fasterxml.jackson.databind.*;[m
+[32m+[m[32mimport com.fasterxml.jackson.databind.deser.std.StdDeserializer;[m
+[32m+[m[32mimport com.fasterxml.jackson.databind.module.SimpleModule;[m
+[32m+[m[32mimport com.fasterxml.jackson.databind.ser.std.StdSerializer;[m
+[32m+[m[32mimport feign.FeignException;[m
+[32m+[m[32mimport feign.Response;[m
+[32m+[m[32mimport feign.codec.ErrorDecoder;[m
+[32m+[m[32mimport io.micrometer.common.util.StringUtils;[m
+[32m+[m[32mimport lombok.Getter;[m
+[32m+[m[32mimport lombok.RequiredArgsConstructor;[m
+[32m+[m[32mimport lombok.extern.slf4j.Slf4j;[m
+[32m+[m[32mimport org.springframework.context.annotation.Bean;[m
+[32m+[m[32mimport org.springframework.context.annotation.Configuration;[m
+[32m+[m[32mimport org.springframework.http.HttpStatus;[m
+[32m+[m[32mimport ru.yandex.practicum.commerce.interactionapi.dto.ErrorDto;[m
+[32m+[m[32mimport ru.yandex.practicum.commerce.interactionapi.exception.*;[m
+[32m+[m
+[32m+[m[32mimport java.io.IOException;[m
+[32m+[m[32mimport java.nio.charset.StandardCharsets;[m
+[32m+[m
+[32m+[m[32m@Slf4j[m
+[32m+[m[32m@Configuration[m
+[32m+[m[32m@RequiredArgsConstructor[m
+[32m+[m[32mpublic class FeignErrorConfig implements ErrorDecoder {[m
+[32m+[m[32m    private final ObjectMapper objectMapper;[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public Exception decode(String methodKey, Response response) {[m
+[32m+[m[32m        int status = response.status();[m
+[32m+[m[32m            byte[] bodyBytes;[m
+[32m+[m[32m            String rawBody;[m
+[32m+[m[32m        ErrorDto errorDto;[m
+[32m+[m[32m            try {[m
+[32m+[m[32m                bodyBytes = response.body().asInputStream().readAllBytes();[m
+[32m+[m[32m                rawBody = new String(bodyBytes, StandardCharsets.UTF_8);[m
+[32m+[m[32m                if (StringUtils.isBlank(rawBody)) {[m
+[32m+[m[32m                    return new Default().decode(methodKey, response);[m
+[32m+[m[32m                }[m
+[32m+[m
+[32m+[m[32m                errorDto = objectMapper.readValue(rawBody, ErrorDto.class);[m
+[32m+[m[32m            } catch (IOException e) {[m
+[32m+[m[32m                log.error("Failed to read response body", e);[m
+[32m+[m[32m                return createFallbackException(status, "Failed to read response body");[m
+[32m+[m[32m            }[m
+[32m+[m
+[32m+[m[32m            HttpStatus httpStatus = HttpStatus.valueOf(status);[m
+[32m+[m
+[32m+[m[32m        Exception exception = switch (httpStatus) {[m
+[32m+[m[32m            case BAD_REQUEST -> handleBadRequest(errorDto);[m
+[32m+[m[32m            case NOT_FOUND -> handleNotFound(errorDto);[m
+[32m+[m[32m            case CONFLICT -> buildSpecifiedProductException(errorDto);[m
+[32m+[m[32m            default -> new Default().decode(methodKey, response);[m
+[32m+[m[32m        };[m
+[32m+[m
+[32m+[m[32m        return exception;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private Exception createFallbackException(int status, String message) {[m
+[32m+[m[32m        return new CustomFeignException([m
+[32m+[m[32m                ErrorDto.builder()[m
+[32m+[m[32m                        .message(message)[m
+[32m+[m[32m                        .userMessage("Service unavailable")[m
+[32m+[m[32m                        .httpStatus(String.valueOf(status))[m
+[32m+[m[32m                        .build(),[m
+[32m+[m[32m                status,[m
+[32m+[m[32m                "fallback"[m
+[32m+[m[32m        );[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private Exception buildSpecifiedProductException(ErrorDto errorDto) {[m
+[32m+[m[32m        return SpecifiedProductAlreadyInWarehouseException.builder()[m
+[32m+[m[32m                .message(errorDto.getMessage())[m
+[32m+[m[32m                .userMessage(errorDto.getUserMessage())[m
+[32m+[m[32m                .httpStatus(HttpStatus.CONFLICT)[m
+[32m+[m[32m                .cause(new RuntimeException(errorDto.getCause()))[m
+[32m+[m[32m                .build();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private Exception handleBadRequest(ErrorDto errorDto) {[m
+[32m+[m[32m        if (errorDto.getMessage().contains("Недостаточно товара на складе")) {[m
+[32m+[m[32m            return ProductInShoppingCartLowQuantityInWarehouse.builder()[m
+[32m+[m[32m                    .message(errorDto.getMessage())[m
+[32m+[m[32m                    .userMessage(errorDto.getUserMessage())[m
+[32m+[m[32m                    .httpStatus(HttpStatus.BAD_REQUEST)[m
+[32m+[m[32m                    .cause(new RuntimeException(errorDto.getCause()))[m
+[32m+[m[32m                    .build();[m
+[32m+[m[32m        }[m
+[32m+[m[32m        return new RuntimeException(errorDto.getMessage());[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private Exception handleNotFound(ErrorDto errorDto) {[m
+[32m+[m[32m        if (errorDto.getMessage().contains("Продукт не найден")) {[m
+[32m+[m[32m            return ProductNotFoundException.builder()[m
+[32m+[m[32m                    .message(errorDto.getMessage())[m
+[32m+[m[32m                    .userMessage(errorDto.getUserMessage())[m
+[32m+[m[32m                    .httpStatus(HttpStatus.NOT_FOUND)[m
+[32m+[m[32m                    .cause(new RuntimeException(errorDto.getCause()))[m
+[32m+[m[32m                    .build();[m
+[32m+[m[32m        } else if (errorDto.getMessage().contains("Корзина не найдена")) {[m
+[32m+[m[32m            return ShoppingCartNotFoundException.builder()[m
+[32m+[m[32m                    .message(errorDto.getMessage())[m
+[32m+[m[32m                    .userMessage(errorDto.getUserMessage())[m
+[32m+[m[32m                    .httpStatus(HttpStatus.NOT_FOUND)[m
+[32m+[m[32m                    .cause(new RuntimeException(errorDto.getCause()))[m
+[32m+[m[32m                    .build();[m
+[32m+[m[32m        } else if (errorDto.getMessage().contains("Указанный продукт отсутствует")) {[m
+[32m+[m[32m            return NoSpecifiedProductInWarehouseException.builder()[m
+[32m+[m[32m                    .message(errorDto.getMessage())[m
+[32m+[m[32m                    .userMessage(errorDto.getUserMessage())[m
+[32m+[m[32m                    .httpStatus(HttpStatus.NOT_FOUND)[m
+[32m+[m[32m                    .cause(new RuntimeException(errorDto.getCause()))[m
+[32m+[m[32m                    .build();[m
+[32m+[m[32m        }[m
+[32m+[m[32m        return new RuntimeException(errorDto.getMessage());[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Bean[m
+[32m+[m[32m    public ObjectMapper objectMapper() {[m
+[32m+[m[32m        ObjectMapper mapper = new ObjectMapper();[m
+[32m+[m
+[32m+[m[32m        mapper.registerModule(new SimpleModule() {[m
+[32m+[m[32m            {[m
+[32m+[m[32m                addSerializer(Throwable.class, new ThrowableSerializer());[m
+[32m+[m[32m                addDeserializer(Throwable.class, new ThrowableDeserializer());[m
+[32m+[m[32m                addSerializer(StackTraceElement.class, new StackTraceElementSerializer());[m
+[32m+[m[32m                addDeserializer(StackTraceElement.class, new StackTraceElementDeserializer());[m
+[32m+[m[32m            }[m
+[32m+[m[32m        });[m
+[32m+[m
+[32m+[m[32m        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);[m
+[32m+[m[32m        return mapper;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public static class ThrowableSerializer extends StdSerializer<Throwable> {[m
+[32m+[m[32m        public ThrowableSerializer() {[m
+[32m+[m[32m            super(Throwable.class);[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        @Override[m
+[32m+[m[32m        public void serialize(Throwable value, JsonGenerator gen, SerializerProvider provider)[m
+[32m+[m[32m                throws IOException {[m
+[32m+[m[32m            gen.writeStartObject();[m
+[32m+[m[32m            gen.writeStringField("exceptionClass", value.getClass().getName());[m
+[32m+[m[32m            gen.writeStringField("message", value.getMessage());[m
+[32m+[m[32m            gen.writeObjectField("stackTrace", value.getStackTrace());[m
+[32m+[m[32m            gen.writeObjectField("cause", value.getCause());[m
+[32m+[m[32m            gen.writeStringField("localizedMessage", value.getLocalizedMessage());[m
+[32m+[m[32m            gen.writeEndObject();[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public static class ThrowableDeserializer extends StdDeserializer<Throwable> {[m
+[32m+[m[32m        public ThrowableDeserializer() {[m
+[32m+[m[32m            super(Throwable.class);[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        @Override[m
+[32m+[m[32m        public Throwable deserialize(JsonParser p, DeserializationContext ctxt)[m
+[32m+[m[32m                throws IOException {[m
+[32m+[m[32m            JsonNode node = p.getCodec().readTree(p);[m
+[32m+[m[32m            String message = node.get("message").asText();[m
+[32m+[m[32m            Throwable cause = p.getCodec().treeToValue(node.get("cause"), Throwable.class);[m
+[32m+[m[32m            StackTraceElement[] stackTrace = p.getCodec().treeToValue(node.get("stackTrace"), StackTraceElement[].class);[m
+[32m+[m
+[32m+[m[32m            Throwable throwable = new Throwable(message, cause);[m
+[32m+[m[32m            throwable.setStackTrace(stackTrace);[m
+[32m+[m[32m            return throwable;[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@Getter[m
+[32m+[m[32mclass CustomFeignException extends FeignException {[m
+[32m+[m[32m    private final ErrorDto errorDto;[m
+[32m+[m
+[32m+[m[32m    public CustomFeignException(ErrorDto errorDto, int status, String methodKey) {[m
+[32m+[m[32m        super(status, "Feign client error: " + methodKey + " - " + errorDto.getMessage());[m
+[32m+[m[32m        this.errorDto = errorDto;[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[32m+[m
+[1mdiff --git a/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/config/StackTraceElementDeserializer.java b/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/config/StackTraceElementDeserializer.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..dfb98a9[m
+[1m--- /dev/null[m
+[1m+++ b/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/config/StackTraceElementDeserializer.java[m
+[36m@@ -0,0 +1,48 @@[m
+[32m+[m[32mpackage ru.yandex.practicum.commerce.interactionapi.config;[m
+[32m+[m
+[32m+[m[32mimport com.fasterxml.jackson.core.JsonParser;[m
+[32m+[m[32mimport com.fasterxml.jackson.databind.DeserializationContext;[m
+[32m+[m[32mimport com.fasterxml.jackson.databind.JsonNode;[m
+[32m+[m[32mimport com.fasterxml.jackson.databind.deser.std.StdDeserializer;[m
+[32m+[m
+[32m+[m[32mimport java.io.IOException;[m
+[32m+[m[32mimport java.lang.reflect.Constructor;[m
+[32m+[m
+[32m+[m[32mpublic class StackTraceElementDeserializer extends StdDeserializer<StackTraceElement> {[m
+[32m+[m[32m    public StackTraceElementDeserializer() {[m
+[32m+[m[32m        super(StackTraceElement.class);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public StackTraceElement deserialize(JsonParser p, DeserializationContext ctxt)[m
+[32m+[m[32m            throws IOException {[m
+[32m+[m[32m        JsonNode node = p.getCodec().readTree(p);[m
+[32m+[m
+[32m+[m[32m        String declaringClass = node.get("className").asText();[m
+[32m+[m[32m        String methodName = node.get("methodName").asText();[m
+[32m+[m[32m        String fileName = node.has("fileName") ? node.get("fileName").asText() : null;[m
+[32m+[m[32m        int lineNumber = node.get("lineNumber").asInt();[m
+[32m+[m[32m        boolean nativeMethod = node.has("nativeMethod") && node.get("nativeMethod").asBoolean();[m
+[32m+[m
+[32m+[m[32m        String moduleName = node.has("moduleName") ? node.get("moduleName").asText() : null;[m
+[32m+[m[32m        String moduleVersion = node.has("moduleVersion") ? node.get("moduleVersion").asText() : null;[m
+[32m+[m
+[32m+[m[32m        try {[m
+[32m+[m[32m            if (moduleName != null) {[m
+[32m+[m[32m                Constructor<StackTraceElement> constructor = StackTraceElement.class[m
+[32m+[m[32m                        .getConstructor(String.class, String.class, String.class,[m
+[32m+[m[32m                                String.class, String.class, String.class, int.class);[m
+[32m+[m[32m                return constructor.newInstance([m
+[32m+[m[32m                        moduleName, moduleVersion,[m
+[32m+[m[32m                        declaringClass, methodName, fileName,[m
+[32m+[m[32m                        node.has("classLoaderName") ? node.get("classLoaderName").asText() : null,[m
+[32m+[m[32m                        lineNumber);[m
+[32m+[m[32m            } else {[m
+[32m+[m[32m                return new StackTraceElement([m
+[32m+[m[32m                        declaringClass, methodName, fileName, lineNumber);[m
+[32m+[m[32m            }[m
+[32m+[m[32m        } catch (Exception e) {[m
+[32m+[m[32m            throw new IOException("Failed to construct StackTraceElement", e);[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/config/StackTraceElementSerializer.java b/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/config/StackTraceElementSerializer.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..b155b01[m
+[1m--- /dev/null[m
+[1m+++ b/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/config/StackTraceElementSerializer.java[m
+[36m@@ -0,0 +1,28 @@[m
+[32m+[m[32mpackage ru.yandex.practicum.commerce.interactionapi.config;[m
+[32m+[m
+[32m+[m[32mimport com.fasterxml.jackson.core.JsonGenerator;[m
+[32m+[m[32mimport com.fasterxml.jackson.databind.SerializerProvider;[m
+[32m+[m[32mimport com.fasterxml.jackson.databind.ser.std.StdSerializer;[m
+[32m+[m
+[32m+[m[32mimport java.io.IOException;[m
+[32m+[m
+[32m+[m[32mpublic class StackTraceElementSerializer extends StdSerializer<StackTraceElement> {[m
+[32m+[m[32m    public StackTraceElementSerializer() {[m
+[32m+[m[32m        super(StackTraceElement.class);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void serialize(StackTraceElement value, JsonGenerator gen, SerializerProvider provider)[m
+[32m+[m[32m            throws IOException {[m
+[32m+[m[32m        gen.writeStartObject();[m
+[32m+[m[32m        gen.writeStringField("className", value.getClassName());[m
+[32m+[m[32m        gen.writeStringField("methodName", value.getMethodName());[m
+[32m+[m[32m        gen.writeStringField("fileName", value.getFileName());[m
+[32m+[m[32m        gen.writeNumberField("lineNumber", value.getLineNumber());[m
+[32m+[m[32m        gen.writeBooleanField("nativeMethod", value.isNativeMethod());[m
+[32m+[m[32m        gen.writeStringField("moduleName", value.getModuleName());[m
+[32m+[m[32m        gen.writeStringField("moduleVersion", value.getModuleVersion());[m
+[32m+[m[32m        gen.writeStringField("classLoaderName", value.getClassLoaderName());[m
+[32m+[m[32m        gen.writeEndObject();[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/exception/AbstractBusinessValidationException.java b/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/exception/AbstractBusinessValidationException.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..478fab0[m
+[1m--- /dev/null[m
+[1m+++ b/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/exception/AbstractBusinessValidationException.java[m
+[36m@@ -0,0 +1,55 @@[m
+[32m+[m[32mpackage ru.yandex.practicum.commerce.interactionapi.exception;[m
+[32m+[m
+[32m+[m[32mimport lombok.Builder;[m
+[32m+[m[32mimport lombok.Getter;[m
+[32m+[m[32mimport org.springframework.http.HttpStatus;[m
+[32m+[m
+[32m+[m[32mimport java.time.Instant;[m
+[32m+[m[32mimport java.util.Arrays;[m
+[32m+[m[32mimport java.util.List;[m
+[32m+[m
+[32m+[m[32m@Getter[m
+[32m+[m[32mpublic abstract class AbstractBusinessValidationException extends RuntimeException {[m
+[32m+[m[32m    private final Instant timestamp;[m
+[32m+[m[32m    private final HttpStatus httpStatus;[m
+[32m+[m[32m    private final String userMessage;[m
+[32m+[m[32m    private final List<StackTraceElement> stackTraceElements;[m
+[32m+[m[32m    private final List<Throwable> suppressedExceptions;[m
+[32m+[m
+[32m+[m[32m    protected AbstractBusinessValidationException([m
+[32m+[m[32m            String message,[m
+[32m+[m[32m            String userMessage,[m
+[32m+[m[32m            HttpStatus httpStatus,[m
+[32m+[m[32m            Throwable cause[m
+[32m+[m[32m    ) {[m
+[32m+[m[32m        super(message, cause);[m
+[32m+[m[32m        this.timestamp = Instant.now();[m
+[32m+[m[32m        this.httpStatus = httpStatus;[m
+[32m+[m[32m        this.userMessage = userMessage;[m
+[32m+[m[32m        this.stackTraceElements = Arrays.asList(this.getStackTrace());[m
+[32m+[m[32m        this.suppressedExceptions = Arrays.asList(this.getSuppressed());[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Getter[m
+[32m+[m[32m    public static class StackTraceElementDetail {[m
+[32m+[m[32m        private final String classLoaderName;[m
+[32m+[m[32m        private final String moduleName;[m
+[32m+[m[32m        private final String moduleVersion;[m
+[32m+[m[32m        private final String methodName;[m
+[32m+[m[32m        private final String fileName;[m
+[32m+[m[32m        private final int lineNumber;[m
+[32m+[m[32m        private final String className;[m
+[32m+[m[32m        private final boolean nativeMethod;[m
+[32m+[m
+[32m+[m[32m        public StackTraceElementDetail(StackTraceElement element) {[m
+[32m+[m[32m            this.classLoaderName = element.getClassLoaderName();[m
+[32m+[m[32m            this.moduleName = element.getModuleName();[m
+[32m+[m[32m            this.moduleVersion = element.getModuleVersion();[m
+[32m+[m[32m            this.methodName = element.getMethodName();[m
+[32m+[m[32m            this.fileName = element.getFileName();[m
+[32m+[m[32m            this.lineNumber = element.getLineNumber();[m
+[32m+[m[32m            this.className = element.getClassName();[m
+[32m+[m[32m            this.nativeMethod = element.isNativeMethod();[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/exception/AbstractResourceNotFoundException.java b/commerce/interaction-api/src/main/java/ru/yandex/practicum/commerce/interactionapi/exce
