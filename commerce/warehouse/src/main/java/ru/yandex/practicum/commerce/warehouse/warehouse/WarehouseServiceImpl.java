@@ -59,6 +59,16 @@ public class WarehouseServiceImpl implements WarehouseService {
                         .collect(Collectors.toList())
         );
 
+        if (warehouseProducts.isEmpty()) {
+            throw ProductNotFoundException.builder()
+                    .message("Продукт не найден")
+                    .userMessage("Товара " + productsInCart.stream()
+                            + " нет в базе.")
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .cause(new RuntimeException("Продукт не найден"))
+                    .build();
+        }
+
         Map<UUID, ProductInWarehouse> warehouseMap = warehouseProducts.stream()
                 .collect(Collectors.toMap(ProductInWarehouse::getProductId, Function.identity()));
 

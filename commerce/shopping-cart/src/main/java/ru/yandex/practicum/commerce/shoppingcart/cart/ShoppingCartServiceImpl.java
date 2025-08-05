@@ -72,9 +72,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             } else {
                 CartProduct newCartProduct = new CartProduct();
                 newCartProduct.setShoppingCart(cart);
-
                 newCartProduct.setProductId(productId);
-
                 newCartProduct.setQuantity(quantity);
                 cart.getProducts().add(newCartProduct);
             }

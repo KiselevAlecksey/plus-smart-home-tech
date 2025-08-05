@@ -4,48 +4,16 @@ import lombok.Builder;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
-
 @Getter
-public class NoSpecifiedProductInWarehouseException extends RuntimeException{
-    private final Instant timestamp;
-    private final HttpStatus httpStatus;
-    private final String userMessage;
-    private final List<StackTraceElement> stackTraceElements;
-    private final List<Throwable> suppressedExceptions;
+public class NoSpecifiedProductInWarehouseException extends AbstractResourceNotFoundException {
 
     @Builder
-    private NoSpecifiedProductInWarehouseException(String message, String userMessage, HttpStatus httpStatus, Throwable cause) {
-        super(message, cause);
-        this.timestamp = Instant.now();
-        this.httpStatus = httpStatus;
-        this.userMessage = userMessage;
-        this.stackTraceElements = Arrays.asList(this.getStackTrace());
-        this.suppressedExceptions = Arrays.asList(this.getSuppressed());
-    }
-
-    @Getter
-    public static class StackTraceElementDetail {
-        private final String classLoaderName;
-        private final String moduleName;
-        private final String moduleVersion;
-        private final String methodName;
-        private final String fileName;
-        private final int lineNumber;
-        private final String className;
-        private final boolean nativeMethod;
-
-        public StackTraceElementDetail(StackTraceElement element) {
-            this.classLoaderName = element.getClassLoaderName();
-            this.moduleName = element.getModuleName();
-            this.moduleVersion = element.getModuleVersion();
-            this.methodName = element.getMethodName();
-            this.fileName = element.getFileName();
-            this.lineNumber = element.getLineNumber();
-            this.className = element.getClassName();
-            this.nativeMethod = element.isNativeMethod();
-        }
+    protected NoSpecifiedProductInWarehouseException(
+            String message,
+            String userMessage,
+            HttpStatus httpStatus,
+            Throwable cause
+    ) {
+        super(message, userMessage, httpStatus, cause);
     }
 }
