@@ -37,6 +37,7 @@ resilience4j.circuitbreaker:
 
 logging:
   level:
+    org.springframework.aop: DEBUG
     org:
       hibernate.orm.jdbc.bind: TRACE
       hibernate.SQL: TRACE

@@ -1,11 +1,15 @@
 package ru.yandex.practicum.commerce.shoppingcart.cart;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import ru.yandex.practicum.commerce.interactionapi.config.RequestScopeObject;
 import ru.yandex.practicum.commerce.interactionapi.dto.*;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityDto;
@@ -17,6 +21,8 @@ import ru.yandex.practicum.commerce.shoppingcart.cart.product.CartProduct;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ru.yandex.practicum.commerce.interactionapi.Util.X_REQUEST_ID_HEADER;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -25,6 +31,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     final ShoppingCartRepository cartRepository;
     final ShoppingCartMapper cartMapper;
     final WarehouseFeignClient warehouseClient;
+    private final RequestScopeObject requestScopeObject;
 
     @Override
     @Transactional
@@ -60,7 +67,13 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                         .collect(Collectors.toSet()))
                 .build();
 
-        warehouseClient.checkProductQuantityForShoppingCart(requestDto);
+        HttpServletRequest request =
+                ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder
+                        .getRequestAttributes()))
+                        .getRequest();
+        String header = requestScopeObject.getRequestId();
+        System.out.println(header);
+        warehouseClient.checkProductQuantityForShoppingCart(requestScopeObject.getRequestId(), requestDto);
 
         products.forEach((productId, quantity) -> {
             Optional<CartProduct> existingProduct = cart.getProducts().stream()

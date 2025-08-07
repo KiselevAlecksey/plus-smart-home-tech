@@ -14,9 +14,9 @@ public class StackTraceElementDeserializer extends StdDeserializer<StackTraceEle
     }
 
     @Override
-    public StackTraceElement deserialize(JsonParser p, DeserializationContext ctxt)
+    public StackTraceElement deserialize(JsonParser parser, DeserializationContext context)
             throws IOException {
-        JsonNode node = p.getCodec().readTree(p);
+        JsonNode node = parser.getCodec().readTree(parser);
 
         String declaringClass = node.get("className").asText();
         String methodName = node.get("methodName").asText();

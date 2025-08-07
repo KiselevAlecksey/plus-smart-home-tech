@@ -12,17 +12,17 @@ public class StackTraceElementSerializer extends StdSerializer<StackTraceElement
     }
 
     @Override
-    public void serialize(StackTraceElement value, JsonGenerator gen, SerializerProvider provider)
+    public void serialize(StackTraceElement value, JsonGenerator generator, SerializerProvider provider)
             throws IOException {
-        gen.writeStartObject();
-        gen.writeStringField("className", value.getClassName());
-        gen.writeStringField("methodName", value.getMethodName());
-        gen.writeStringField("fileName", value.getFileName());
-        gen.writeNumberField("lineNumber", value.getLineNumber());
-        gen.writeBooleanField("nativeMethod", value.isNativeMethod());
-        gen.writeStringField("moduleName", value.getModuleName());
-        gen.writeStringField("moduleVersion", value.getModuleVersion());
-        gen.writeStringField("classLoaderName", value.getClassLoaderName());
-        gen.writeEndObject();
+        generator.writeStartObject();
+        generator.writeStringField("className", value.getClassName());
+        generator.writeStringField("methodName", value.getMethodName());
+        generator.writeStringField("fileName", value.getFileName());
+        generator.writeNumberField("lineNumber", value.getLineNumber());
+        generator.writeBooleanField("nativeMethod", value.isNativeMethod());
+        generator.writeStringField("moduleName", value.getModuleName());
+        generator.writeStringField("moduleVersion", value.getModuleVersion());
+        generator.writeStringField("classLoaderName", value.getClassLoaderName());
+        generator.writeEndObject();
     }
 }
