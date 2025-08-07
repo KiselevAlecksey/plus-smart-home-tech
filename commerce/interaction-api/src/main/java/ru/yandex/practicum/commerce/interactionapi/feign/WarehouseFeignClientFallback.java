@@ -20,7 +20,7 @@ public class WarehouseFeignClientFallback implements WarehouseFeignClient {
     }
 
     @Override
-    public BookedProductsDto checkProductQuantityForShoppingCart(ShoppingCartRequestDto request) {
+    public BookedProductsDto checkProductQuantityForShoppingCart(String headerValue, ShoppingCartRequestDto request) {
         log.warn("Fallback: checkProductQuantityForShoppingCart - сервис недоступен. Запрос: {}", request);
 
         return BookedProductsDto.builder().build();

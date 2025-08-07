@@ -25,6 +25,7 @@ public interface ProductMapper {
 
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "quantity", source = "newQuantity")
+    @Mapping(target = "shoppingCart", ignore = true)
     CartProduct toEntityFromChangeDto(ProductQuantityDto dto);
 
     @Mapping(target = "productId", source = "productId")

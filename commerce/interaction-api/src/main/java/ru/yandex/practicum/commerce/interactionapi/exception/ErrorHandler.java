@@ -8,14 +8,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.buf.StringUtils;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.yandex.practicum.commerce.interactionapi.ErrorDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.ErrorDto;
 
 import java.util.List;
 
@@ -104,16 +106,33 @@ public class ErrorHandler {
                 .cause(e.getCause())
                 .stackTrace(e.getStackTrace())
                 .httpStatus(HttpStatus.NOT_FOUND.toString())
-                .userMessage("Не найден товар")
+                .userMessage(e.getUserMessage())
                 .message(e.getMessage())
                 .suppressed(e.getSuppressed())
                 .localizedMessage(e.getLocalizedMessage())
                 .build();
     }
 
+
+    @ExceptionHandler(ProductInShoppingCartLowQuantityInWarehouse.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ErrorDto> handleException(ProductInShoppingCartLowQuantityInWarehouse e) {
+        return ResponseEntity.status(e.getHttpStatus())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ErrorDto.builder()
+                        .cause(e.getCause())
+                        .stackTrace(e.getStackTrace())
+                        .httpStatus(HttpStatus.BAD_REQUEST.toString())
+                        .userMessage(e.getUserMessage())
+                        .message(e.getMessage())
+                        .suppressed(e.getSuppressed())
+                        .localizedMessage(e.getLocalizedMessage())
+                        .build());
+    }
+
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorDto handleException(Exception e) {
+    public ErrorDto handleException(Throwable e) {
         log.warn("Непредвиденная ошибка:", e);
         return ErrorDto.builder()
                 .cause(e.getCause())

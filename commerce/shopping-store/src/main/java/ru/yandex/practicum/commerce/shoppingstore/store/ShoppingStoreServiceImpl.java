@@ -3,6 +3,9 @@ package ru.yandex.practicum.commerce.shoppingstore.store;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -32,6 +35,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     final ProductMapper productMapper;
 
     @Override
+    @Cacheable(value = "products", key = "#categoty")
     public Page<ProductFullResponseDto> getProductsCategorySort(ProductCategory category, Pageable pageable) {
         return productRepository.findByProductCategory(category, pageable)
                 .map(productMapper::toResponseDto);
@@ -39,6 +43,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
 
     @Override
     @Transactional
+    @CachePut(value = "product", key = "#result.productId")
     public ProductFullResponseDto createProduct(ProductCreateDto createDto) {
         Product product = productMapper.toEntityFromCreate(createDto);
         return productMapper.toResponseDto(productRepository.save(product));
@@ -46,6 +51,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
 
     @Override
     @Transactional
+    @CachePut(value = "product", key = "#updateDto.productId")
     public ProductFullResponseDto updateProduct(ProductUpdateDto updateDto) {
         Product product = productRepository.findById(updateDto.productId())
                 .orElseThrow(() -> ProductNotFoundException.builder()
@@ -62,6 +68,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public boolean removeProductFromStore(UUID productId) {
         try {
             return productRepository.findById(productId)
@@ -78,6 +85,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
 
     @Override
     @Transactional
+    @CachePut(value = "product", key = "#stateRequest.productId")
     public boolean setProductQuantityState(ProductQuantityStateRequest stateRequest) {
         try {
             return productRepository.findById(stateRequest.productId())

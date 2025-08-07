@@ -1,6 +1,8 @@
 package ru.yandex.practicum.commerce.warehouse.warehouse;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     @Override
     @Transactional
+    @CachePut(value = "product", key = "#request.productId")
     public void addNewProductToWarehouse(NewProductInWarehouseRequestDto request) {
         ProductInWarehouse product = productInWarehouseMapper.toEntity(request);
 
@@ -40,6 +43,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
+    @Cacheable(value = "product", key = "#request.productId")
     public BookedProductsDto checkProductQuantityForShoppingCart(ShoppingCartRequestDto request) {
         BookedProductsDto bookedProductsDto = BookedProductsDto.builder()
                 .deliveryWeight(0.0)
@@ -58,6 +62,16 @@ public class WarehouseServiceImpl implements WarehouseService {
                         .map(ProductInWarehouse::getProductId)
                         .collect(Collectors.toList())
         );
+
+        if (warehouseProducts.isEmpty()) {
+            throw ProductNotFoundException.builder()
+                    .message("Продукт не найден")
+                    .userMessage("Товара " + productsInCart.stream()
+                            + " нет в базе.")
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .cause(new RuntimeException("Продукт не найден"))
+                    .build();
+        }
 
         Map<UUID, ProductInWarehouse> warehouseMap = warehouseProducts.stream()
                 .collect(Collectors.toMap(ProductInWarehouse::getProductId, Function.identity()));
@@ -80,7 +94,8 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     private static BookedProductsDto getBookedProductsDto(
             Set<ProductInWarehouse> productsInCart, Map<UUID,
-            ProductInWarehouse> warehouseMap) {
+            ProductInWarehouse> warehouseMap
+    ) {
         BookedProductsDto bookedProducts = productsInCart.stream()
                 .map(cartProduct -> {
                     ProductInWarehouse warehouseProduct = warehouseMap.get(cartProduct.getProductId());
@@ -116,6 +131,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     @Override
     @Transactional
+    @CachePut(value = "product", key = "#request.productId")
     public void addProductInstanceToWarehouse(AddProductToWarehouseRequest request) {
         ProductInWarehouse product = warehouseRepository.findById(request.productId())
                 .orElseThrow(() -> ProductNotFoundException.builder()

@@ -1,9 +1,11 @@
-package ru.yandex.practicum.commerce.interactionapi;
+package ru.yandex.practicum.commerce.interactionapi.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder(toBuilder = true)
 public class ErrorDto {
     private Throwable cause;
@@ -20,3 +22,4 @@ public class ErrorDto {
 
     private String localizedMessage;
 }
+

@@ -17,6 +17,7 @@ feign:
   client:
     config:
       default:
+        error-decoder: ru.yandex.practicum.commerce.interactionapi.config.FeignErrorConfig
         connect-timeout: 2000
         read-timeout: 5000
 
@@ -36,6 +37,7 @@ resilience4j.circuitbreaker:
 
 logging:
   level:
+    org.springframework.aop: DEBUG
     org:
       hibernate.orm.jdbc.bind: TRACE
       hibernate.SQL: TRACE
