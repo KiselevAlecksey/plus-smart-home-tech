@@ -1,4 +1,4 @@
-package ru.yandex.practicum.commerce.interactionapi.annotation;
+package ru.yandex.practicum.commerce.interactionapi.aspect;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

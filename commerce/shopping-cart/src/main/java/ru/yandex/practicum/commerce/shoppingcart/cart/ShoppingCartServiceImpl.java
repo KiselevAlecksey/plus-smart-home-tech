@@ -1,14 +1,14 @@
 package ru.yandex.practicum.commerce.shoppingcart.cart;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import ru.yandex.practicum.commerce.interactionapi.config.RequestScopeObject;
 import ru.yandex.practicum.commerce.interactionapi.dto.*;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
@@ -20,8 +20,6 @@ import ru.yandex.practicum.commerce.shoppingcart.cart.product.CartProduct;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static ru.yandex.practicum.commerce.interactionapi.Util.X_REQUEST_ID_HEADER;
 
 @Service
 @Transactional
@@ -36,6 +34,11 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     @Transactional
     public ShoppingCartResponseDto getShoppingCartByUserName(String userName) {
+        return cartMapper.toResponseDto(getShoppingCart(userName));
+    }
+
+    @Cacheable(value = "userShoppingCart", key = "#userName")
+    private ShoppingCart getShoppingCart(String userName) {
         ShoppingCart cart = cartRepository.findByUserName(userName)
                 .orElseGet(() -> {
                     ShoppingCart newCart = ShoppingCart.builder()
@@ -45,36 +48,29 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                             .build();
                     return cartRepository.save(newCart);
                 });
-        return cartMapper.toResponseDto(cart);
+        return cart;
     }
 
     @Override
     public ShoppingCartResponseDto addProductsToShoppingCart(String userName, Map<UUID, Long> products) {
-        ShoppingCart cart = cartRepository.findByUserName(userName)
-                .orElseGet(() -> {
-                    ShoppingCart newCart = ShoppingCart.builder()
-                            .userName(userName)
-                            .state(ShoppingCartState.ACTIVE)
-                            .products(new HashSet<>())
-                            .build();
-                    return cartRepository.save(newCart);
-                });
+        ShoppingCart cart = getShoppingCart(userName);
+        ShoppingCartRequestDto requestDto = getRequestShoppingCart(products, cart);
+        checkProductsQuantity(requestDto);
+        setQuantityProducts(products, cart);
+        return transactionalSaveCart(cart);
+    }
 
+    private static ShoppingCartRequestDto getRequestShoppingCart(Map<UUID, Long> products, ShoppingCart cart) {
         ShoppingCartRequestDto requestDto = ShoppingCartRequestDto.builder()
                 .shoppingCartId(cart.getShoppingCartId())
                 .products(products.entrySet().stream()
                         .map(entry -> new ProductDto(entry.getKey(), entry.getValue()))
                         .collect(Collectors.toSet()))
                 .build();
+        return requestDto;
+    }
 
-        HttpServletRequest request =
-                ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder
-                        .getRequestAttributes()))
-                        .getRequest();
-        String header = requestScopeObject.getRequestId();
-        System.out.println(header);
-        warehouseClient.checkProductQuantityForShoppingCart(requestScopeObject.getRequestId(), requestDto);
-
+    private static void setQuantityProducts(Map<UUID, Long> products, ShoppingCart cart) {
         products.forEach((productId, quantity) -> {
             Optional<CartProduct> existingProduct = cart.getProducts().stream()
                     .filter(cp -> cp.getProductId().equals(productId))
@@ -83,18 +79,23 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 CartProduct cp = existingProduct.get();
                 cp.setQuantity(cp.getQuantity() + quantity);
             } else {
-                CartProduct newCartProduct = new CartProduct();
-                newCartProduct.setShoppingCart(cart);
-                newCartProduct.setProductId(productId);
-                newCartProduct.setQuantity(quantity);
-                cart.getProducts().add(newCartProduct);
+                cart.getProducts().add(
+                        CartProduct.builder()
+                                .shoppingCart(cart)
+                                .productId(productId)
+                                .quantity(quantity)
+                                .build()
+                );
             }
         });
+    }
 
-        return transactionalSaveCart(cart);
+    private void checkProductsQuantity(ShoppingCartRequestDto requestDto) {
+        warehouseClient.checkProductQuantityForShoppingCart(requestScopeObject.getRequestId(), requestDto);
     }
 
     @Transactional
+    @CachePut(value = "userShoppingCart", key = "#userName")
     private ShoppingCartResponseDto transactionalSaveCart(ShoppingCart cart) {
         ShoppingCart savedCart = cartRepository.save(cart);
         return cartMapper.toResponseDto(savedCart);
@@ -102,6 +103,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "userShoppingCart", key = "#userName")
     public void removeShoppingCart(String userName) {
         ShoppingCart cart = cartRepository.findByUserName(userName)
                 .orElseThrow(() -> ShoppingCartNotFoundException.builder()

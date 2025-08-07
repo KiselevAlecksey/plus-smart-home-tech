@@ -8,7 +8,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.commerce.interactionapi.annotation.RestLogging;
+import ru.yandex.practicum.commerce.interactionapi.aspect.RestLogging;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductFullResponseDto;
 import ru.yandex.practicum.commerce.interactionapi.feign.ShoppingStoreController;
 import ru.yandex.practicum.commerce.interactionapi.enums.ProductCategory;

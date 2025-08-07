@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.commerce.interactionapi.annotation.RestLogging;
+import ru.yandex.practicum.commerce.interactionapi.aspect.RestLogging;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.ShoppingCartResponseDto;
 import ru.yandex.practicum.commerce.interactionapi.feign.ShoppingCartController;

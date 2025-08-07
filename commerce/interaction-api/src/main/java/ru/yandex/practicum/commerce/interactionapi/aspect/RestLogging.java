@@ -1,4 +1,4 @@
-package ru.yandex.practicum.commerce.interactionapi.annotation;
+package ru.yandex.practicum.commerce.interactionapi.aspect;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
