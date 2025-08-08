@@ -101,6 +101,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     }
 
     @Override
+    @Cacheable(value = "product", key = "#productId")
     public ProductFullResponseDto getByProductId(String productId) {
         try {
             return productRepository.findById(UUID.fromString(productId))

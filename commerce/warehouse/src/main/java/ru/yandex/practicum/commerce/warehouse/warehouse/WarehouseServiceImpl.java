@@ -15,10 +15,7 @@ import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.BookedProductsD
 import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.NewProductInWarehouseRequestDto;
 
 import java.security.SecureRandom;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,31 +35,85 @@ public class WarehouseServiceImpl implements WarehouseService {
     @CachePut(value = "product", key = "#request.productId")
     public void addNewProductToWarehouse(NewProductInWarehouseRequestDto request) {
         ProductInWarehouse product = productInWarehouseMapper.toEntity(request);
-
         warehouseRepository.save(product);
     }
 
     @Override
     @Cacheable(value = "product", key = "#request.productId")
     public BookedProductsDto checkProductQuantityForShoppingCart(ShoppingCartRequestDto request) {
-        BookedProductsDto bookedProductsDto = BookedProductsDto.builder()
-                .deliveryWeight(0.0)
-                .deliveryVolume(0.0)
-                .fragile(false)
-                .build();
+        BookedProductsDto bookedProductsDto = getDefaultBookedProductsDto();
 
         if (request.products().isEmpty()) return bookedProductsDto;
 
-        Set<ProductInWarehouse> productsInCart = request.products().stream()
-                .map(productInWarehouseMapper::toEntity)
-                .collect(Collectors.toSet());
+        Set<ProductInWarehouse> productsInCart = getProductsInCart(request);
+        Set<ProductInWarehouse> warehouseProducts = getWarehouseProducts(productsInCart);
 
-        Set<ProductInWarehouse> warehouseProducts = warehouseRepository.findByProductIdIn(
-                productsInCart.stream()
-                        .map(ProductInWarehouse::getProductId)
-                        .collect(Collectors.toList())
-        );
+        checkProductsInWarehouseOrThrow(warehouseProducts, productsInCart);
+        Map<UUID, ProductInWarehouse> warehouseMap = toProductsMap(warehouseProducts);
+        checkProductQuantitiesOrThrow(productsInCart, warehouseMap);
 
+        return getBookedProductsDto(productsInCart, warehouseMap);
+    }
+
+    @Override
+    @Transactional
+    @CachePut(value = "product", key = "#request.productId")
+    public void addProductInstanceToWarehouse(AddProductToWarehouseRequest request) {
+        ProductInWarehouse product = getProductInWarehouseOrThrow(request);
+
+        warehouseRepository.saveAndFlush(product.toBuilder()
+                .quantity(product.getQuantity() + request.quantity())
+                .build());
+    }
+    
+    @Override
+    @Cacheable(value = "address")
+    public AddressDto getAddressWarehouse() {
+        return AddressDto.builder()
+                .country(CURRENT_ADDRESS)
+                .city(CURRENT_ADDRESS)
+                .street(CURRENT_ADDRESS)
+                .house(CURRENT_ADDRESS)
+                .flat(CURRENT_ADDRESS)
+                .build();
+    }
+
+    private static void checkProductQuantitiesOrThrow(
+            Set<ProductInWarehouse> productsInCart,
+            Map<UUID, ProductInWarehouse> warehouseMap
+    ) {
+        productsInCart.forEach(cartProduct -> {
+            ProductInWarehouse product = warehouseMap.get(cartProduct.getProductId());
+            if (product == null || product.getQuantity() < cartProduct.getQuantity()) {
+                throwInsufficientQuantityException(cartProduct, product);
+            }
+        });
+    }
+
+    private static void throwInsufficientQuantityException(
+            ProductInWarehouse cartProduct,
+            ProductInWarehouse warehouseProduct
+    ) {
+        throw ProductInShoppingCartLowQuantityInWarehouse.builder()
+                .message("Недостаточно товара на складе")
+                .userMessage("Товара " + cartProduct.getProductId()
+                        + " недостаточно на складе. Доступно: "
+                        + (warehouseProduct != null ? warehouseProduct.getQuantity() : null)
+                        + ", требуется: " + cartProduct.getQuantity())
+                .httpStatus(HttpStatus.BAD_REQUEST)
+                .cause(new RuntimeException("Недостаточное количество товара"))
+                .build();
+    }
+
+    private static Map<UUID, ProductInWarehouse> toProductsMap(Set<ProductInWarehouse> warehouseProducts) {
+        return warehouseProducts.stream()
+                .collect(Collectors.toMap(ProductInWarehouse::getProductId, Function.identity()));
+    }
+
+    private static void checkProductsInWarehouseOrThrow(
+            Set<ProductInWarehouse> warehouseProducts,
+            Set<ProductInWarehouse> productsInCart
+    ) {
         if (warehouseProducts.isEmpty()) {
             throw ProductNotFoundException.builder()
                     .message("Продукт не найден")
@@ -72,88 +123,79 @@ public class WarehouseServiceImpl implements WarehouseService {
                     .cause(new RuntimeException("Продукт не найден"))
                     .build();
         }
+    }
 
-        Map<UUID, ProductInWarehouse> warehouseMap = warehouseProducts.stream()
-                .collect(Collectors.toMap(ProductInWarehouse::getProductId, Function.identity()));
+    private Set<ProductInWarehouse> getWarehouseProducts(Set<ProductInWarehouse> productsInCart) {
+        return warehouseRepository.findByProductIdIn(
+                productsInCart.stream()
+                        .map(ProductInWarehouse::getProductId)
+                        .collect(Collectors.toList())
+        );
+    }
 
-        productsInCart.forEach(cartProduct -> {
-            ProductInWarehouse warehouseProduct = warehouseMap.get(cartProduct.getProductId());
-            if (warehouseProduct == null || warehouseProduct.getQuantity() < cartProduct.getQuantity()) {
-                throw ProductInShoppingCartLowQuantityInWarehouse.builder()
-                        .message("Недостаточно товара на складе")
-                        .userMessage("Товара " + cartProduct.getProductId()
-                                + " недостаточно на складе. Доступно: "
-                                + (warehouseProduct != null ? warehouseProduct.getQuantity() : null) + ", требуется: " + cartProduct.getQuantity())
-                        .httpStatus(HttpStatus.BAD_REQUEST)
-                        .cause(new RuntimeException("Недостаточное количество товара"))
-                        .build();
-            }
-        });
-        return getBookedProductsDto(productsInCart, warehouseMap);
+    private Set<ProductInWarehouse> getProductsInCart(ShoppingCartRequestDto request) {
+        return request.products().stream()
+                .map(productInWarehouseMapper::toEntity)
+                .collect(Collectors.toSet());
+    }
+
+    private static BookedProductsDto getDefaultBookedProductsDto() {
+        return BookedProductsDto.builder()
+                .deliveryWeight(0.0)
+                .deliveryVolume(0.0)
+                .fragile(false)
+                .build();
     }
 
     private static BookedProductsDto getBookedProductsDto(
             Set<ProductInWarehouse> productsInCart, Map<UUID,
             ProductInWarehouse> warehouseMap
     ) {
-        BookedProductsDto bookedProducts = productsInCart.stream()
-                .map(cartProduct -> {
-                    ProductInWarehouse warehouseProduct = warehouseMap.get(cartProduct.getProductId());
-
-                    return warehouseProduct.toBuilder()
-                            .quantity(cartProduct.getQuantity())
-                            .build();
-                })
+        return productsInCart.stream()
+                .map(cartProduct -> getProductInWarehouseMap(warehouseMap, cartProduct))
                 .collect(Collectors.collectingAndThen(
                         Collectors.toList(),
-                        products -> {
-                            double totalWeight = 0.0;
-                            double totalVolume = 0.0;
-                            boolean anyFragile = false;
-
-                            for (ProductInWarehouse product : products) {
-                                totalWeight += product.getWeight() * product.getQuantity();
-                                totalVolume += product.getWidth() * product.getHeight()
-                                        * product.getDepth() * product.getQuantity();
-                                anyFragile = anyFragile || product.isFragile();
-                            }
-
-                            return BookedProductsDto.builder()
-                                    .deliveryWeight(totalWeight)
-                                    .deliveryVolume(totalVolume)
-                                    .fragile(anyFragile)
-                                    .build();
-                        }
+                        WarehouseServiceImpl::computeDeliveryMetrics
                 ));
-        return bookedProducts;
     }
 
+    private static ProductInWarehouse getProductInWarehouseMap(
+            Map<UUID, ProductInWarehouse> warehouseMap,
+            ProductInWarehouse cartProduct
+    ) {
+        ProductInWarehouse warehouseProduct = warehouseMap.get(cartProduct.getProductId());
 
-    @Override
-    @Transactional
-    @CachePut(value = "product", key = "#request.productId")
-    public void addProductInstanceToWarehouse(AddProductToWarehouseRequest request) {
-        ProductInWarehouse product = warehouseRepository.findById(request.productId())
+        return warehouseProduct.toBuilder()
+                .quantity(cartProduct.getQuantity())
+                .build();
+    }
+
+    private static BookedProductsDto computeDeliveryMetrics(List<ProductInWarehouse> products) {
+        double totalWeight = 0.0;
+        double totalVolume = 0.0;
+        boolean anyFragile = false;
+
+        for (ProductInWarehouse product : products) {
+            totalWeight += product.getWeight() * product.getQuantity();
+            totalVolume += product.getWidth() * product.getHeight()
+                    * product.getDepth() * product.getQuantity();
+            anyFragile = anyFragile || product.isFragile();
+        }
+
+        return BookedProductsDto.builder()
+                .deliveryWeight(totalWeight)
+                .deliveryVolume(totalVolume)
+                .fragile(anyFragile)
+                .build();
+    }
+
+    private ProductInWarehouse getProductInWarehouseOrThrow(AddProductToWarehouseRequest request) {
+        return warehouseRepository.findById(request.productId())
                 .orElseThrow(() -> ProductNotFoundException.builder()
                         .message("Ошибка при поиске продукта")
                         .userMessage("Продукт не найден. Пожалуйста, проверьте идентификатор")
                         .httpStatus(HttpStatus.NOT_FOUND)
                         .cause(new RuntimeException("Продукт с ID " + request.productId() + " не найден"))
                         .build());
-
-        warehouseRepository.saveAndFlush(product.toBuilder()
-                .quantity(product.getQuantity() + request.quantity())
-                .build());
-    }
-
-    @Override
-    public AddressDto getAddressWarehouse() {
-        return AddressDto.builder()
-                .country(CURRENT_ADDRESS)
-                .city(CURRENT_ADDRESS)
-                .street(CURRENT_ADDRESS)
-                .house(CURRENT_ADDRESS)
-                .flat(CURRENT_ADDRESS)
-                .build();
     }
 }
