@@ -9,14 +9,15 @@ import java.util.Arrays;
 import java.util.List;
 
 @Getter
-public abstract class AbstractBusinessValidationException extends RuntimeException {
+public abstract class BaseCustomException extends RuntimeException {
     private final Instant timestamp;
     private final HttpStatus httpStatus;
     private final String userMessage;
     private final List<StackTraceElement> stackTraceElements;
     private final List<Throwable> suppressedExceptions;
 
-    protected AbstractBusinessValidationException(
+    @Builder
+    protected BaseCustomException(
             String message,
             String userMessage,
             HttpStatus httpStatus,

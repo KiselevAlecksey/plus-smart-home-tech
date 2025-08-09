@@ -4,9 +4,9 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class NoSpecifiedProductInWarehouseException extends BaseCustomException {
+public class NotAuthorizedUserException extends BaseCustomException {
 
-    protected NoSpecifiedProductInWarehouseException(
+    protected NotAuthorizedUserException(
             String message,
             String userMessage,
             HttpStatus httpStatus,

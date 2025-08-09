@@ -29,7 +29,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     final ShoppingCartRepository cartRepository;
     final ShoppingCartMapper cartMapper;
     final WarehouseFeignClient warehouseClient;
-    private final RequestScopeObject requestScopeObject;
+    final RequestScopeObject requestScopeObject;
 
     @Override
     @Transactional

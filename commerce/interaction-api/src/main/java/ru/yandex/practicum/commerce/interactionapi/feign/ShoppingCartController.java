@@ -15,8 +15,9 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface ShoppingCartController {
-    @Cacheable(value = "userShoppingCart", key = "#userName")
+
     @GetMapping
+    @Cacheable(value = "userShoppingCart", key = "#userName")
     ShoppingCartResponseDto getShoppingCartByUserName(
             @RequestParam(value = "username") @NotBlank String userName);
 
@@ -25,18 +26,21 @@ public interface ShoppingCartController {
             @RequestParam(value = "username") @NotBlank String userName,
             @RequestBody(required = false) @Valid Map<UUID, Long> products);
 
-    @CacheEvict(value = "userShoppingCart", key = "#userName")
+
     @DeleteMapping
+    @CacheEvict(value = "userShoppingCart", key = "#userName")
     void removeShoppingCart(@RequestParam(value = "username") @NotBlank String userName);
 
-    @CachePut(value = "userShoppingCart", key = "#userName")
+
     @PostMapping("/remove")
+    @CachePut(value = "userShoppingCart", key = "#userName")
     ShoppingCartResponseDto removeShoppingCartProducts(
             @RequestParam(value = "username") @NotBlank String userName,
             @RequestBody Set<UUID> products);
 
-    @CachePut(value = "userShoppingCart", key = "#userName")
+
     @PostMapping("/change-quantity")
+    @CachePut(value = "userShoppingCart", key = "#userName")
     ShoppingCartResponseDto changeProductQuantity(
             @RequestParam(value = "username") @NotBlank String userName,
             @RequestBody(required = false) @Validated ProductQuantityDto changeQuantity);

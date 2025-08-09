@@ -1,6 +1,7 @@
 package ru.yandex.practicum.commerce.interactionapi.feign;
 
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -38,11 +39,11 @@ public interface ShoppingStoreController {
 
     @PostMapping("/removeProductFromStore")
     @CacheEvict(value = "product", key = "#productId")
-    boolean removeProductFromStore(@RequestBody UUID productId);
+    boolean removeProductFromStore(@RequestBody @NotBlank UUID productId);
 
     @PostMapping("/quantityState")
     @CachePut(value = "product", key = "#stateRequest.productId")
-    boolean setProductQuantityState(@RequestParam UUID productId, @RequestParam String quantityState);
+    boolean setProductQuantityState(@RequestParam @NotBlank UUID productId, @RequestParam String quantityState);
 
     @GetMapping("/{productId}")
     @Cacheable(value = "product", key = "#productId")
