@@ -15,6 +15,7 @@ public interface ProductInWarehouseMapper {
     @Mapping(target = "depth", source = "dimension.depth")
     @Mapping(target = "weight", source = "weight")
     @Mapping(target = "quantity", constant = "0L")
+    @Mapping(target = "price", source = "request.price")
     ProductInWarehouse toEntity(NewProductInWarehouseRequestDto request);
 
     @Mapping(target = "productId", source = "response.productId")

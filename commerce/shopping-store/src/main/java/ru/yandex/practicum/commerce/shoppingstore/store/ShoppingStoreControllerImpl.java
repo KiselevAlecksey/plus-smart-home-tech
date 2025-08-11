@@ -17,6 +17,9 @@ import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantitySt
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductUpdateDto;
 import ru.yandex.practicum.commerce.interactionapi.enums.QuantityState;
 
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -85,5 +88,12 @@ public class ShoppingStoreControllerImpl implements ShoppingStoreController {
     @RestLogging
     public ProductFullResponseDto getByProductId(@PathVariable String productId) {
         return storeService.getByProductId(productId);
+    }
+
+    @Override
+    @GetMapping("/products")
+    @RestLogging
+    public Map<UUID, BigDecimal> getByProductIds(@RequestBody Set<UUID> productIds) {
+        return storeService.getByProductIds(productIds);
     }
 }

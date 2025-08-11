@@ -4,6 +4,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.interactionapi.aspect.RestLogging;
@@ -12,7 +15,6 @@ import ru.yandex.practicum.commerce.interactionapi.dto.order.OrderDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.ProductReturnRequest;
 import ru.yandex.practicum.commerce.interactionapi.feign.OrderController;
 
-import java.util.Collection;
 import java.util.UUID;
 
 @Slf4j
@@ -26,21 +28,24 @@ public class OrderControllerImpl implements OrderController {
     @Override
     @GetMapping
     @RestLogging
-    public Collection<OrderDto> getAllOrdersByUser(@RequestParam(value = "username") @NotBlank String userName) {
-        return null;
+    public Page<OrderDto> getAllOrdersByUser(
+            @RequestParam(value = "username") @NotBlank String userName,
+            @PageableDefault(page = 0, size = 10) Pageable pageable
+    ) {
+        return orderService.getAllOrdersByUser(userName, pageable);
     }
 
     @Override
     @PutMapping
     @RestLogging
     public OrderDto createOrder(@RequestBody @Valid CreateNewOrderRequest newOrderRequest) {
-        return null;
+        return orderService.createOrder(newOrderRequest);
     }
 
     @Override
     @RestLogging
     public OrderDto returnOrder(@RequestBody @Valid ProductReturnRequest returnRequest) {
-        return null;
+        return orderService.returnOrder(returnRequest);
     }
 
     @Override

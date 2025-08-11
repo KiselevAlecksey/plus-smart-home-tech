@@ -5,27 +5,28 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.CreateNewOrderRequest;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.OrderDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.ProductReturnRequest;
 
-import java.util.Collection;
 import java.util.UUID;
 
 public interface OrderController {
 
-    //orders.order
     @GetMapping
     @Cacheable(value = "orders", key = "#userName")
-    Collection<OrderDto> getAllOrdersByUser(@RequestParam(value = "username") @NotBlank String userName);
+    Page<OrderDto> getAllOrdersByUser(
+            @RequestParam(value = "username") @NotBlank String userName, Pageable pageable);
 
     @PutMapping
-    @CachePut(value = "order", key = "#userName")
+    @CacheEvict(value = "orders", key = "#userName")
     OrderDto createOrder(@RequestBody @Valid CreateNewOrderRequest newOrderRequest);
 
     @PostMapping("/return")
-    @CacheEvict(value = "order", key = "#userName")
+    @CacheEvict(value = "orders", key = "#userName")
     OrderDto returnOrder(@RequestBody @Valid ProductReturnRequest returnRequest);
 
     @PostMapping("/payment")

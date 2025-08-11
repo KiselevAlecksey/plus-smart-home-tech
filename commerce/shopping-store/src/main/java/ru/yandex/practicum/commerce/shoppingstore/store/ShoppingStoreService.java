@@ -8,6 +8,9 @@ import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductCreateDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityStateRequest;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductUpdateDto;
 
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -24,4 +27,7 @@ public interface ShoppingStoreService {
     boolean setProductQuantityState(ProductQuantityStateRequest stateRequest);
 
     ProductFullResponseDto getByProductId(String productId);
+
+    Map<UUID, BigDecimal> getByProductIds(Set<UUID> productId);
+
 }

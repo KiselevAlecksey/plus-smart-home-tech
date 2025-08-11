@@ -3,6 +3,7 @@ package ru.yandex.practicum.commerce.order.order;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -28,6 +29,9 @@ public class CartProduct {
 
     @Column(name = "quantity", nullable = false)
     private Long quantity;
+
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    BigDecimal price;
 
     @Override
     public boolean equals(Object o) {

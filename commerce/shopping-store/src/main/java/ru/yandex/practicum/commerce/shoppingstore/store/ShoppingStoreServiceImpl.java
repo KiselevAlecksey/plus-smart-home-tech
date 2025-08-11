@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductFullResponseDto;
 import ru.yandex.practicum.commerce.interactionapi.exception.ProductNotFoundException;
 import ru.yandex.practicum.commerce.shoppingstore.product.Product;
@@ -22,6 +23,9 @@ import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductUpdateDto;
 import ru.yandex.practicum.commerce.interactionapi.enums.ProductCategory;
 import ru.yandex.practicum.commerce.shoppingstore.product.ProductMapper;
 
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -112,6 +116,20 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
                             .httpStatus(HttpStatus.NOT_FOUND)
                             .cause(new RuntimeException("Продукт с ID " + productId + " не найден"))
                             .build());
+        } catch (IllegalArgumentException e) {
+            throw ProductNotFoundException.builder()
+                    .message("Невалидный идентификатор продукта")
+                    .userMessage("Некорректный формат идентификатора продукта")
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .cause(e)
+                    .build();
+        }
+    }
+
+    @Override
+    public Map<UUID, BigDecimal> getByProductIds(@RequestBody Set<UUID> productIds) {
+        try {
+            return productRepository.findByIds(productIds);
         } catch (IllegalArgumentException e) {
             throw ProductNotFoundException.builder()
                     .message("Невалидный идентификатор продукта")

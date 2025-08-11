@@ -3,6 +3,7 @@ package ru.yandex.practicum.commerce.warehouse.warehouse;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -36,4 +37,7 @@ public class ProductInWarehouse {
 
     @Column(name = "weight", nullable = false)
     private double weight;
+
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
 }

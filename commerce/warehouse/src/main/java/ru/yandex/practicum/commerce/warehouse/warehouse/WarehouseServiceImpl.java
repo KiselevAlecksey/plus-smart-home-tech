@@ -14,10 +14,13 @@ import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.AddressDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.BookedProductsDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.NewProductInWarehouseRequestDto;
 
+import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static ru.yandex.practicum.commerce.interactionapi.Util.ADDRESSES;
 
 @Service
 @Transactional
@@ -25,8 +28,6 @@ import java.util.stream.Collectors;
 public class WarehouseServiceImpl implements WarehouseService {
     private final WarehouseRepository warehouseRepository;
     private final ProductInWarehouseMapper productInWarehouseMapper;
-    private static final String[] ADDRESSES =
-            new String[] {"ADDRESS_1", "ADDRESS_2"};
     private static final String CURRENT_ADDRESS =
             ADDRESSES[Random.from(new SecureRandom()).nextInt(0, 1)];
 
@@ -174,8 +175,10 @@ public class WarehouseServiceImpl implements WarehouseService {
         double totalWeight = 0.0;
         double totalVolume = 0.0;
         boolean anyFragile = false;
+        Map<UUID, BigDecimal> prices = new HashMap<>();
 
         for (ProductInWarehouse product : products) {
+            prices.put(product.getProductId(), product.getPrice());
             totalWeight += product.getWeight() * product.getQuantity();
             totalVolume += product.getWidth() * product.getHeight()
                     * product.getDepth() * product.getQuantity();
@@ -186,6 +189,7 @@ public class WarehouseServiceImpl implements WarehouseService {
                 .deliveryWeight(totalWeight)
                 .deliveryVolume(totalVolume)
                 .fragile(anyFragile)
+                .prices(prices)
                 .build();
     }
 

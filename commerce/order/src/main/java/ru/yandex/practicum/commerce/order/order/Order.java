@@ -23,13 +23,16 @@ public class Order {
     UUID orderId;
 
     @Column(name = "shopping_cart_id", nullable = false)
-    UUID ShoppingCartId;
+    UUID shoppingCartId;
 
     @Column(name = "payment_id", nullable = false)
     UUID paymentId;
 
     @Column(name = "delivery_id", nullable = false)
     UUID deliveryId;
+
+    @Column(name = "user_name", nullable = false)
+    private String userName;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CartProduct> products;

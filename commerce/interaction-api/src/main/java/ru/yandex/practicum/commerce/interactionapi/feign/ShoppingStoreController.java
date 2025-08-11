@@ -11,17 +11,20 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.commerce.interactionapi.aspect.RestLogging;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductCreateDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductFullResponseDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductUpdateDto;
 
 
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public interface ShoppingStoreController {
 
     @GetMapping
-    @Cacheable(value = "products", key = "#category")
     Page<ProductFullResponseDto> getProductsCategorySort(
             @RequestParam String category,
             @PageableDefault(page = 0, size = 10) Pageable pageable);
@@ -48,4 +51,7 @@ public interface ShoppingStoreController {
     @GetMapping("/{productId}")
     @Cacheable(value = "product", key = "#productId")
     ProductFullResponseDto getByProductId(@PathVariable String productId);
+
+    @GetMapping("/products")
+    Map<UUID, BigDecimal> getByProductIds(@RequestBody Set<UUID> productIds);
 }

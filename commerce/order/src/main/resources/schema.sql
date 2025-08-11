@@ -4,18 +4,18 @@ CREATE SCHEMA IF NOT EXISTS shopping_store;
 
 -- Таблица: orders (заказы)
 CREATE TABLE IF NOT EXISTS shopping_store.orders (
-    order_id UUID DEFAULT gen_random_uuid() PRIMARY KEY NOT NULL,
+    order_id UUID PRIMARY KEY NOT NULL,
     shopping_cart_id UUID NOT NULL,
-
+    user_name VARCHAR(256) NOT NULL UNIQUE,
     payment_id UUID NOT NULL,
     delivery_id UUID NOT NULL,
     state VARCHAR(128) NOT NULL,
     fragile BOOLEAN NOT NULL DEFAULT false,
     delivery_weight FLOAT8 NOT NULL,
     delivery_volume FLOAT8 NOT NULL,
-    total_price VARCHAR(200),
-    delivery_price VARCHAR(200),
-    product_price VARCHAR(200)
+    total_price NUMERIC(12, 2) NOT NULL,
+    delivery_price NUMERIC(12, 2) NOT NULL,
+    product_price NUMERIC(12, 2) NOT NULL
 );
 
 COMMENT ON TABLE shopping_store.orders IS 'Содержит информацию о заказах';
@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS shopping_store.cart_products (
     order_id UUID NOT NULL,
     shopping_cart_id UUID NOT NULL,
     quantity BIGINT NOT NULL,
+    price NUMERIC(12, 2) NOT NULL
     CONSTRAINT fk_shopping_cart
         FOREIGN KEY (order_id)
         REFERENCES shopping_store.orders(order_id)
