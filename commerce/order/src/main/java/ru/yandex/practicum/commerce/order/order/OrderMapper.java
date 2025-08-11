@@ -3,6 +3,7 @@ package ru.yandex.practicum.commerce.order.order;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.OrderDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.AddressDto;
 
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +18,10 @@ public interface OrderMapper {
 
     @Mapping(target = "products", expression = "java(mapProductMapToCartProducts(dto.products()))")
     Order toOrder(OrderDto dto);
+
+    Address toAddress(AddressDto dto);
+
+    AddressDto toAddressDto(Address address);
 
     default Map<UUID, Long> mapCartProductsToMap(Set<CartProduct> cartProducts) {
         if (cartProducts == null) return Map.of();

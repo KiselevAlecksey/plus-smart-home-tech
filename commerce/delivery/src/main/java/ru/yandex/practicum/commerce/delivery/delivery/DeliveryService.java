@@ -12,4 +12,5 @@ public interface DeliveryService {
     void deliveryPicked(UUID deliveryId);
     void deliveryFailed(UUID deliveryId);
     BigDecimal deliveryCost(OrderDto orderDto);
+    UUID getDeliveryId(String orderId);
 }

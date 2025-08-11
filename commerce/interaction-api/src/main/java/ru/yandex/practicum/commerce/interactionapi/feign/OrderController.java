@@ -30,10 +30,10 @@ public interface OrderController {
     OrderDto returnOrder(@RequestBody @Valid ProductReturnRequest returnRequest);
 
     @PostMapping("/payment")
-    OrderDto returnOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto paymentOrder(@RequestBody @NotBlank UUID orderId);
 
     @PostMapping("/payment/failed")
-    OrderDto failedOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto paymentFailedOrder(@RequestBody @NotBlank UUID orderId);
 
     @PostMapping("/delivery")
     OrderDto deliveryOrder(@RequestBody @NotBlank UUID orderId);

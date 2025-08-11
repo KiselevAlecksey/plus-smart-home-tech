@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -40,4 +42,8 @@ public class ProductInWarehouse {
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
+
+    @OneToMany(mappedBy = "productInWarehouse", fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<BookedProductItem> bookings = new HashSet<>();
 }

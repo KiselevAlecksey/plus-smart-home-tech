@@ -10,7 +10,6 @@ import java.util.UUID;
 public record BookedProductsDto(
         double deliveryWeight,
         double deliveryVolume,
-        boolean fragile,
-        Map<UUID, BigDecimal> prices
+        boolean fragile
 ) {
 }

@@ -50,13 +50,13 @@ public class OrderControllerImpl implements OrderController {
 
     @Override
     @RestLogging
-    public OrderDto returnOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto paymentOrder(@RequestBody @NotBlank UUID orderId) {
         return null;
     }
 
     @Override
     @RestLogging
-    public OrderDto failedOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto paymentFailedOrder(@RequestBody @NotBlank UUID orderId) {
         return null;
     }
 

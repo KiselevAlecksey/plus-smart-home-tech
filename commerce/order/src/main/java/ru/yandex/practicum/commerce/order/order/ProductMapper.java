@@ -5,8 +5,6 @@ import org.mapstruct.Mapping;
 import ru.yandex.practicum.commerce.interactionapi.dto.ProductResponseDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityDto;
-import ru.yandex.practicum.commerce.shoppingcart.cart.product.CartProduct;
-
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
@@ -14,6 +12,8 @@ public interface ProductMapper {
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "quantity", source = "quantity")
     ProductResponseDto toResponseProductDto(CartProduct product);
+
+    ProductDto toProductDto(CartProduct product);
 
     @Mapping(target = "shoppingCart", ignore = true)
     CartProduct toEntityProduct(ProductResponseDto dto);

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.commerce.interactionapi.dto.PaymentDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.OrderDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
+import ru.yandex.practicum.commerce.interactionapi.feign.DeliveryFeignClient;
 import ru.yandex.practicum.commerce.interactionapi.feign.ShoppingStoreFeignClient;
 
 import java.math.BigDecimal;
@@ -18,11 +19,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PaymentServiceImpl implements PaymentService {
-    final PaymentMapper paymentMapper;
-    final PaymentRepository paymentRepository;
-    final ShoppingStoreFeignClient storeFeignClient;
+    public static final double PERCENT_FEE = 0.1;
+    PaymentMapper paymentMapper;
+    PaymentRepository paymentRepository;
+    ShoppingStoreFeignClient storeFeignClient;
+    DeliveryFeignClient deliveryFeignClient;
+
 
     @Override
     public PaymentDto payment(OrderDto dto) {
@@ -32,7 +36,11 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public BigDecimal totalCost(OrderDto dto) {
-        return null;
+        BigDecimal fee = dto.productPrice().multiply(BigDecimal.valueOf(PERCENT_FEE));
+
+        BigDecimal totalCost = dto.productPrice().add(fee).add(deliveryFeignClient.deliveryCost(dto));
+
+        return totalCost;
     }
 
     @Override

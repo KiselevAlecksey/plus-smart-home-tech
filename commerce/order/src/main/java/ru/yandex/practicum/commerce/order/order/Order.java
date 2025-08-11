@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.commerce.interactionapi.enums.OrderState;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,7 +16,7 @@ import java.util.UUID;
 @Table(name = "orders", schema = "shopping_store")
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Order {
     @Id
@@ -34,28 +35,32 @@ public class Order {
     @Column(name = "user_name", nullable = false)
     private String userName;
 
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Address address;
+
     @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CartProduct> products;
+    @Builder.Default
+    private Set<CartProduct> products = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
     OrderState state;
 
-    @Column(name = "delivery_weight", nullable = false)
+    @Column(name = "delivery_weight")
     double deliveryWeight;
 
-    @Column(name = "delivery_volume", nullable = false)
+    @Column(name = "delivery_volume")
     double deliveryVolume;
 
-    @Column(name = "fragile", nullable = false)
+    @Column(name = "fragile")
     boolean fragile;
 
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    @Column(name = "price", precision = 10, scale = 2)
     BigDecimal totalPrice;
 
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    @Column(name = "price", precision = 10, scale = 2)
     BigDecimal deliveryPrice;
 
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    @Column(name = "price", precision = 10, scale = 2)
     BigDecimal productPrice;
 }

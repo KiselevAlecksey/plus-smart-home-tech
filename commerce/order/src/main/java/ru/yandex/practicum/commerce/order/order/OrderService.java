@@ -16,9 +16,9 @@ public interface OrderService {
 
     OrderDto returnOrder(ProductReturnRequest returnRequest);
 
-    OrderDto returnOrder(UUID orderId);
+    OrderDto paymentOrder(UUID orderId);
 
-    OrderDto failedOrder(UUID orderId);
+    OrderDto paymentFailedOrder(UUID orderId);
 
     OrderDto deliveryOrder(UUID orderId);
 

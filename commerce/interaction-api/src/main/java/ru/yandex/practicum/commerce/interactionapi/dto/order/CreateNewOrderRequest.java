@@ -9,7 +9,6 @@ import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.BookedProductsD
 public record CreateNewOrderRequest(
         ShoppingCartRequestDto shoppingCart,
         AddressDto deliveryAddress,
-        BookedProductsDto bookedProducts,
         String userName
 ) {
 }

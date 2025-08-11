@@ -49,3 +49,26 @@ COMMENT ON TABLE shopping_store.cart_products IS 'Содержит информ�
 COMMENT ON COLUMN shopping_store.cart_products.product_id IS 'Уникальный идентификатор товара в корзине';
 COMMENT ON COLUMN shopping_store.cart_products.shopping_cart_id IS 'Ссылка на корзину';
 COMMENT ON COLUMN shopping_store.cart_products.quantity IS 'Количество данного товара в корзине';
+
+CREATE TABLE IF NOT EXISTS shopping_store.addresses (
+    address_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    country VARCHAR(100) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    street VARCHAR(200) NOT NULL,
+    house VARCHAR(20) NOT NULL,
+    flat VARCHAR(20),
+    order_id UUID NOT NULL UNIQUE,
+    CONSTRAINT fk_order_address
+        FOREIGN KEY (order_id)
+        REFERENCES shopping_store.orders(order_id)
+        ON DELETE CASCADE
+);
+
+COMMENT ON TABLE shopping_store.addresses IS 'Содержит адреса доставки заказов';
+COMMENT ON COLUMN shopping_store.addresses.address_id IS 'Уникальный идентификатор адреса';
+COMMENT ON COLUMN shopping_store.addresses.country IS 'Страна доставки';
+COMMENT ON COLUMN shopping_store.addresses.city IS 'Город доставки';
+COMMENT ON COLUMN shopping_store.addresses.street IS 'Улица доставки';
+COMMENT ON COLUMN shopping_store.addresses.house IS 'Номер дома';
+COMMENT ON COLUMN shopping_store.addresses.flat IS 'Номер квартиры';
+COMMENT ON COLUMN shopping_store.addresses.order_id IS 'Ссылка на заказ';

@@ -1,13 +1,9 @@
 package ru.yandex.practicum.commerce.delivery.delivery;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.commerce.interactionapi.aspect.RestLogging;
 import ru.yandex.practicum.commerce.interactionapi.dto.DeliveryDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.OrderDto;
 import ru.yandex.practicum.commerce.interactionapi.feign.DeliveryController;
@@ -45,5 +41,10 @@ public class DeliveryControllerImpl implements DeliveryController {
     @Override
     public BigDecimal deliveryCost(OrderDto orderDto) {
         return deliveryService.deliveryCost(orderDto);
+    }
+
+    @Override
+    public UUID getDeliveryId(String orderId) {
+        return deliveryService.getDeliveryId(orderId);
     }
 }

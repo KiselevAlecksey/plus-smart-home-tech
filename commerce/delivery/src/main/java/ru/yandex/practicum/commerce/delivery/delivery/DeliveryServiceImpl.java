@@ -106,6 +106,11 @@ public class DeliveryServiceImpl implements DeliveryService {
                 : deliveryCost.multiply(BigDecimal.valueOf(ADDRESS_TO_COEFFICIENT)).add(deliveryCost);
     }
 
+    @Override
+    public UUID getDeliveryId(String orderId) {
+        return deliveryRepository.findByOrderId(UUID.fromString(orderId));
+    }
+
     private static boolean isAddressEqualsAddress1(Address addressFrom) {
         return addressFrom.getCountry().equals(ADDRESSES[0])
                 || addressFrom.getCity().equals(ADDRESSES[0])
