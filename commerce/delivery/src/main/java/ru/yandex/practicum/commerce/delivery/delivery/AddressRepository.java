@@ -8,5 +8,4 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface AddressRepository extends JpaRepository<Address, UUID> {
-    List<Address> findByDeliveryId(UUID deliveryId);
 }

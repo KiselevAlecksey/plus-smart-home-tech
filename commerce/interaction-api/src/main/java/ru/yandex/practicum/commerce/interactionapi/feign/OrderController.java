@@ -35,6 +35,9 @@ public interface OrderController {
     @PostMapping("/payment/failed")
     OrderDto paymentFailedOrder(@RequestBody @NotBlank UUID orderId);
 
+    @PostMapping("/payment/success")
+    OrderDto paymentSuccessOrder(@RequestBody @NotBlank UUID orderId);
+
     @PostMapping("/delivery")
     OrderDto deliveryOrder(@RequestBody @NotBlank UUID orderId);
 

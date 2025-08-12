@@ -35,9 +35,10 @@ COMMENT ON COLUMN shopping_store.orders.product_price IS 'Цена товара'
 CREATE TABLE IF NOT EXISTS shopping_store.cart_products (
     product_id UUID PRIMARY KEY NOT NULL,
     order_id UUID NOT NULL,
-    shopping_cart_id UUID NOT NULL,
+    shopping_cart_id UUID,
     quantity BIGINT NOT NULL,
-    price NUMERIC(12, 2) NOT NULL
+    price NUMERIC(12, 2) NOT NULL,
+    CONSTRAINT pk_cart_products PRIMARY KEY (product_id),
     CONSTRAINT fk_shopping_cart
         FOREIGN KEY (order_id)
         REFERENCES shopping_store.orders(order_id)
@@ -71,4 +72,3 @@ COMMENT ON COLUMN shopping_store.addresses.city IS 'Город доставки'
 COMMENT ON COLUMN shopping_store.addresses.street IS 'Улица доставки';
 COMMENT ON COLUMN shopping_store.addresses.house IS 'Номер дома';
 COMMENT ON COLUMN shopping_store.addresses.flat IS 'Номер квартиры';
-COMMENT ON COLUMN shopping_store.addresses.order_id IS 'Ссылка на заказ';

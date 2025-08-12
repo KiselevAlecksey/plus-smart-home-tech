@@ -1,8 +1,10 @@
 package ru.yandex.practicum.commerce.interactionapi.exception;
 
+import lombok.Builder;
 import org.springframework.http.HttpStatus;
 
 public class NoDeliveryFoundException extends BaseCustomException {
+    @Builder
     protected NoDeliveryFoundException(
             String message,
             String userMessage,

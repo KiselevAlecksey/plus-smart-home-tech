@@ -24,7 +24,7 @@ public class CartProduct {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Column(name = "shopping_cart_id", nullable = false)
+    @Column(name = "shopping_cart_id")
     private UUID shoppingCartId;
 
     @Column(name = "quantity", nullable = false)

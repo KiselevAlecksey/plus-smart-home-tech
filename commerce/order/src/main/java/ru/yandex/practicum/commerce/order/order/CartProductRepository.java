@@ -6,5 +6,4 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface CartProductRepository extends JpaRepository<CartProduct, UUID> {
-    Set<CartProduct> findByOrderId(UUID orderId);
 }

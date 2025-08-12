@@ -43,5 +43,5 @@ public interface ShoppingCartController {
     @CachePut(value = "userShoppingCart", key = "#userName")
     ShoppingCartResponseDto changeProductQuantity(
             @RequestParam(value = "username") @NotBlank String userName,
-            @RequestBody(required = false) @Validated ProductQuantityDto changeQuantity);
+            @RequestBody(required = false) @Valid ProductQuantityDto changeQuantity);
 }

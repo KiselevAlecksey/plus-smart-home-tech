@@ -4,7 +4,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +14,7 @@ import ru.yandex.practicum.commerce.interactionapi.dto.order.OrderDto;
 import ru.yandex.practicum.commerce.interactionapi.feign.PaymentController;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,8 +28,13 @@ public class PaymentControllerImpl implements PaymentController {
     @Override
     @RestLogging
     @PostMapping
-    public PaymentDto payment(@RequestBody OrderDto dto) {
-        return paymentService.payment(dto);
+    public PaymentDto paymentCreate(@RequestBody OrderDto dto) {
+        return paymentService.paymentCreate(dto);
+    }
+
+    @Override
+    public void paymentSuccess(UUID paymentId) {
+        paymentService.paymentSuccess(paymentId);
     }
 
     @Override
@@ -42,8 +47,8 @@ public class PaymentControllerImpl implements PaymentController {
     @Override
     @RestLogging
     @PostMapping("/refund")
-    public void refund(@RequestBody String orderId) {
-        paymentService.refund(orderId);
+    public void refund(@RequestBody UUID paymentId) {
+        paymentService.refund(paymentId);
     }
 
     @Override
@@ -56,7 +61,7 @@ public class PaymentControllerImpl implements PaymentController {
     @Override
     @RestLogging
     @PostMapping("/failed")
-    public void failed(@RequestBody String paymentId) {
+    public void failed(@RequestBody UUID paymentId) {
         paymentService.failed(paymentId);
     }
 }

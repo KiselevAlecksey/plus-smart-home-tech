@@ -15,7 +15,6 @@ import java.util.Set;
 
 import static ru.yandex.practicum.commerce.interactionapi.Util.X_REQUEST_ID_HEADER;
 
-@RequestMapping("/api/v1/warehouse")
 public interface WarehouseController {
     @PutMapping
     @RestLogging

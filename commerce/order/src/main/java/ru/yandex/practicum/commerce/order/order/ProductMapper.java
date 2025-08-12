@@ -1,12 +1,13 @@
 package ru.yandex.practicum.commerce.order.order;
 
+import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import ru.yandex.practicum.commerce.interactionapi.dto.ProductResponseDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityDto;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true))
 public interface ProductMapper {
 
     @Mapping(target = "productId", source = "productId")
@@ -15,20 +16,17 @@ public interface ProductMapper {
 
     ProductDto toProductDto(CartProduct product);
 
-    @Mapping(target = "shoppingCart", ignore = true)
     CartProduct toEntityProduct(ProductResponseDto dto);
 
-    @Mapping(target = "shoppingCart", ignore = true)
-    @Mapping(target = "productId", source = "productId")
+    @Mapping(target = "productId", source = "id")
     @Mapping(target = "quantity", source = "quantity")
     CartProduct toEntityProduct(ProductDto dto);
 
-    @Mapping(target = "productId", source = "productId")
+    @Mapping(target = "productId", source = "id")
     @Mapping(target = "quantity", source = "newQuantity")
-    @Mapping(target = "shoppingCart", ignore = true)
     CartProduct toEntityFromChangeDto(ProductQuantityDto dto);
 
-    @Mapping(target = "productId", source = "productId")
+    @Mapping(target = "id", source = "productId")
     @Mapping(target = "newQuantity", source = "quantity")
     ProductQuantityDto toDto(CartProduct product);
 }

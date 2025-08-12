@@ -6,7 +6,7 @@ import java.util.UUID;
 
 @Builder
 public record ProductDto(
-        UUID productId,
+        UUID id,
         long quantity
 ) {
 }

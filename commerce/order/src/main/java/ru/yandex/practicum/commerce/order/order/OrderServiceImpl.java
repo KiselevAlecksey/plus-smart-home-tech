@@ -22,6 +22,7 @@ import ru.yandex.practicum.commerce.interactionapi.feign.PaymentFeignClient;
 import ru.yandex.practicum.commerce.interactionapi.feign.WarehouseFeignClient;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -62,27 +63,61 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDto returnOrder(ProductReturnRequest returnRequest) {
-
-        // убрать из заказа возвратные продукты
+        Map<UUID, CartProduct> productDtoMap = returnRequest.products().stream()
+                .collect(Collectors.toMap(ProductDto::id, productMapper::toEntityProduct));
 
         Order order = getOrder(returnRequest.orderId());
+
+        warehouseFeignClient.returnOrder(
+                order.getProducts().stream()
+                        .filter(p -> p.equals(productDtoMap.get(p.getProductId())))
+                        .map(productMapper::toProductDto)
+                        .collect(Collectors.toSet())
+        );
+
+        order.setProducts(
+                order.getProducts().stream()
+                .filter(p -> !p.equals(productDtoMap.get(p.getProductId())))
+                .collect(Collectors.toSet())
+        );
+
+        OrderDto dto = orderMapper.toOrderDto(order);
+
+        order.setDeliveryPrice(deliveryFeignClient.deliveryCost(dto));
+        order.setProductPrice(paymentFeignClient.productCost(dto));
+        order.setTotalPrice(paymentFeignClient.totalCost(dto));
+
         return orderMapper.toOrderDto(
-                order.toBuilder()
+                orderRepository.saveAndFlush(order.toBuilder()
                         .state(OrderState.PRODUCT_RETURNED)
                         .build()
+                )
         );
     }
 
     @Override
     public OrderDto paymentOrder(UUID orderId) {
         Order order = getOrder(orderId);
-        PaymentDto paymentDto = paymentFeignClient.payment(orderMapper.toOrderDto(order));
+        PaymentDto paymentDto = paymentFeignClient.paymentCreate(orderMapper.toOrderDto(order));
 
         return orderMapper.toOrderDto(
-                order.toBuilder()
-                        .state(OrderState.PAID)
+                orderRepository.saveAndFlush(order.toBuilder()
+                        .state(OrderState.ON_PAYMENT)
                         .paymentId(paymentDto.paymentId())
                         .build()
+                )
+        );
+    }
+
+    @Override
+    public OrderDto paymentSuccessOrder(UUID orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow();
+
+        return orderMapper.toOrderDto(
+                orderRepository.saveAndFlush(order.toBuilder()
+                        .state(OrderState.PAID)
+                        .build()
+                )
         );
     }
 
@@ -90,9 +125,11 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto paymentFailedOrder(UUID orderId) {
         Order order = getOrder(orderId);
         return orderMapper.toOrderDto(
-                order.toBuilder()
-                        .state(OrderState.PAYMENT_FAILED)
-                        .build()
+                orderRepository.saveAndFlush(
+                        order.toBuilder()
+                                .state(OrderState.PAYMENT_FAILED)
+                                .build()
+                )
         );
     }
 
@@ -100,9 +137,11 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto deliveryOrder(UUID orderId) {
         Order order = getOrder(orderId);
         return orderMapper.toOrderDto(
-                order.toBuilder()
-                        .state(OrderState.DELIVERED)
-                        .build()
+                orderRepository.saveAndFlush(
+                        order.toBuilder()
+                                .state(OrderState.ON_DELIVERY)
+                                .build()
+                )
         );
     }
 
@@ -110,9 +149,11 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto deliveryFailedOrder(UUID orderId) {
         Order order = getOrder(orderId);
         return orderMapper.toOrderDto(
-                order.toBuilder()
-                        .state(OrderState.DELIVERY_FAILED)
-                        .build()
+                orderRepository.saveAndFlush(
+                        order.toBuilder()
+                                .state(OrderState.DELIVERY_FAILED)
+                                .build()
+                )
         );
     }
 
@@ -120,9 +161,11 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto completedOrder(UUID orderId) {
         Order order = getOrder(orderId);
         return orderMapper.toOrderDto(
-                order.toBuilder()
-                        .state(OrderState.COMPLETED)
-                        .build()
+                orderRepository.saveAndFlush(
+                        order.toBuilder()
+                                .state(OrderState.COMPLETED)
+                                .build()
+                )
         );
     }
 
@@ -131,10 +174,12 @@ public class OrderServiceImpl implements OrderService {
         Order order = getOrder(orderId);
         BigDecimal productCost = paymentFeignClient.productCost(orderMapper.toOrderDto(order));
         return orderMapper.toOrderDto(
-                order.toBuilder()
-                        .productPrice(productCost)
-                        .totalPrice(productCost.add(order.getDeliveryPrice()))
-                        .build()
+                orderRepository.saveAndFlush(
+                        order.toBuilder()
+                                .productPrice(productCost)
+                                .totalPrice(productCost.add(order.getDeliveryPrice()))
+                                .build()
+                )
         );
     }
 
@@ -144,10 +189,12 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal deliveryCost = deliveryFeignClient.deliveryCost(orderMapper.toOrderDto(order));
 
         return orderMapper.toOrderDto(
-                order.toBuilder()
-                        .deliveryPrice(deliveryCost)
-                        .deliveryId(deliveryFeignClient.getDeliveryId(String.valueOf(orderId)))
-                        .build()
+                orderRepository.saveAndFlush(
+                        order.toBuilder()
+                                .deliveryPrice(deliveryCost)
+                                .deliveryId(deliveryFeignClient.getDeliveryId(String.valueOf(orderId)))
+                                .build()
+                )
         );
     }
 
@@ -165,11 +212,14 @@ public class OrderServiceImpl implements OrderService {
                 .build());
 
         return orderMapper.toOrderDto(
-                order.toBuilder()
-                        .state(OrderState.ASSEMBLED)
-                        .deliveryWeight(bookedProductsDto.deliveryWeight())
-                        .deliveryVolume(bookedProductsDto.deliveryVolume())
-                        .fragile(bookedProductsDto.fragile()).build()
+                orderRepository.saveAndFlush(
+                        order.toBuilder()
+                                .state(OrderState.ASSEMBLED)
+                                .deliveryWeight(bookedProductsDto.deliveryWeight())
+                                .deliveryVolume(bookedProductsDto.deliveryVolume())
+                                .fragile(bookedProductsDto.fragile())
+                                .build()
+                )
         );
     }
 
@@ -186,9 +236,11 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto assemblyFailedOrder(UUID orderId) {
         Order order = getOrder(orderId);
         return orderMapper.toOrderDto(
-                order.toBuilder()
-                        .state(OrderState.ASSEMBLY_FAILED)
-                        .build()
+                orderRepository.saveAndFlush(
+                        order.toBuilder()
+                                .state(OrderState.ASSEMBLY_FAILED)
+                                .build()
+                )
         );
     }
 }

@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -47,7 +48,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
 
     @Override
     @Transactional
-    @CachePut(value = "product", key = "#result.productId")
+    @CachePut(value = "product", key = "#result.id")
     public ProductFullResponseDto createProduct(ProductCreateDto createDto) {
         Product product = productMapper.toEntityFromCreate(createDto);
         return productMapper.toResponseDto(productRepository.save(product));
@@ -127,9 +128,10 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     }
 
     @Override
-    public Map<UUID, BigDecimal> getByProductIds(@RequestBody Set<UUID> productIds) {
+    public Map<UUID, BigDecimal> getPriceMapByProductIds(@RequestBody Set<UUID> productIds) {
         try {
-            return productRepository.findByIds(productIds);
+            return productRepository.findAllByIdIn(productIds).stream()
+                    .collect(Collectors.toMap(Product::getId, Product::getPrice));
         } catch (IllegalArgumentException e) {
             throw ProductNotFoundException.builder()
                     .message("Невалидный идентификатор продукта")

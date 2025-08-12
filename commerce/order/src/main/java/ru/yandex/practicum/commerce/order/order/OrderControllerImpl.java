@@ -51,54 +51,59 @@ public class OrderControllerImpl implements OrderController {
     @Override
     @RestLogging
     public OrderDto paymentOrder(@RequestBody @NotBlank UUID orderId) {
-        return null;
+        return orderService.paymentOrder(orderId);
     }
 
     @Override
     @RestLogging
     public OrderDto paymentFailedOrder(@RequestBody @NotBlank UUID orderId) {
-        return null;
+        return orderService.paymentFailedOrder(orderId);
+    }
+
+    @Override
+    public OrderDto paymentSuccessOrder(UUID orderId) {
+        return orderService.paymentSuccessOrder(orderId);
     }
 
     @Override
     @RestLogging
     public OrderDto deliveryOrder(@RequestBody @NotBlank UUID orderId) {
-        return null;
+        return orderService.deliveryOrder(orderId);
     }
 
     @Override
     @RestLogging
     public OrderDto deliveryFailedOrder(@RequestBody @NotBlank UUID orderId) {
-        return null;
+        return orderService.deliveryFailedOrder(orderId);
     }
 
     @Override
     @RestLogging
     public OrderDto completedOrder(@RequestBody @NotBlank UUID orderId) {
-        return null;
+        return orderService.completedOrder(orderId);
     }
 
     @Override
     @RestLogging
     public OrderDto calculateTotalOrder(@RequestBody @NotBlank UUID orderId) {
-        return null;
+        return orderService.calculateTotalOrder(orderId);
     }
 
     @Override
     @RestLogging
     public OrderDto calculateDeliveryOrder(@RequestBody @NotBlank UUID orderId) {
-        return null;
+        return orderService.calculateDeliveryOrder(orderId);
     }
 
     @Override
     @RestLogging
     public OrderDto assemblyOrder(@RequestBody @NotBlank UUID orderId) {
-        return null;
+        return orderService.assemblyOrder(orderId);
     }
 
     @Override
     @RestLogging
     public OrderDto assemblyFailedOrder(@RequestBody @NotBlank UUID orderId) {
-        return null;
+        return orderService.assemblyFailedOrder(orderId);
     }
 }

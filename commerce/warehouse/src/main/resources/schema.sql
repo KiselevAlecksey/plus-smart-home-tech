@@ -9,8 +9,7 @@ CREATE TABLE IF NOT EXISTS shopping_store.products_in_warehouse (
     width FLOAT8 NOT NULL,
     height FLOAT8 NOT NULL,
     depth FLOAT8 NOT NULL,
-    weight FLOAT8 NOT NULL,
-    price NUMERIC(12, 2) NOT NULL
+    weight FLOAT8 NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS shopping_store.order_bookings (

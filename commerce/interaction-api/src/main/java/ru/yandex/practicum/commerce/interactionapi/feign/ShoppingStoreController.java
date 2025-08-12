@@ -31,7 +31,7 @@ public interface ShoppingStoreController {
 
 
     @PutMapping
-    @CachePut(value = "product", key = "#result.productId")
+    @CachePut(value = "product", key = "#result.id")
     @ResponseStatus(HttpStatus.CREATED)
     ProductFullResponseDto createProduct(@RequestBody @Validated ProductCreateDto createDto);
 
@@ -42,11 +42,11 @@ public interface ShoppingStoreController {
 
     @PostMapping("/removeProductFromStore")
     @CacheEvict(value = "product", key = "#productId")
-    boolean removeProductFromStore(@RequestBody @NotBlank UUID productId);
+    boolean removeProductFromStore(@RequestBody UUID productId);
 
     @PostMapping("/quantityState")
     @CachePut(value = "product", key = "#stateRequest.productId")
-    boolean setProductQuantityState(@RequestParam @NotBlank UUID productId, @RequestParam String quantityState);
+    boolean setProductQuantityState(@RequestParam UUID productId, @RequestParam String quantityState);
 
     @GetMapping("/{productId}")
     @Cacheable(value = "product", key = "#productId")

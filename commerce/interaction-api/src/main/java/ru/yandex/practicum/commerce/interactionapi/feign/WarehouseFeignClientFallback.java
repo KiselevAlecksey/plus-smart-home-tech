@@ -4,10 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.commerce.interactionapi.dto.ShoppingCartRequestDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.AddProductToWarehouseRequest;
-import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.AddressDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.BookedProductsDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.NewProductInWarehouseRequestDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.*;
+
+import java.util.Set;
 
 @Component
 public class WarehouseFeignClientFallback implements WarehouseFeignClient {
@@ -37,5 +37,20 @@ public class WarehouseFeignClientFallback implements WarehouseFeignClient {
         return AddressDto.builder()
                 .country("Адрес не доступен")
                 .build();
+    }
+
+    @Override
+    public BookedProductsDto assembly(AssemblyProductsForOrderRequest request) {
+        return null;
+    }
+
+    @Override
+    public void returnOrder(Set<ProductDto> productDtos) {
+
+    }
+
+    @Override
+    public void shipToDelivery(ShippedToDeliveryRequest request) {
+
     }
 }

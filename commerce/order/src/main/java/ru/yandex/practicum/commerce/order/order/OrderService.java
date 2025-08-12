@@ -20,6 +20,8 @@ public interface OrderService {
 
     OrderDto paymentFailedOrder(UUID orderId);
 
+    OrderDto paymentSuccessOrder(UUID orderId);
+
     OrderDto deliveryOrder(UUID orderId);
 
     OrderDto deliveryFailedOrder(UUID orderId);

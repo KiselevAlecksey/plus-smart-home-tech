@@ -11,8 +11,6 @@ import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.ShippedToDelive
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Validated
-@RequestMapping("/api/v1/delivery")
 public interface DeliveryController {
 
     @PutMapping

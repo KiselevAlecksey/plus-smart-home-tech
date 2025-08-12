@@ -2,6 +2,7 @@ package ru.yandex.practicum.commerce.delivery.delivery;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.commerce.interactionapi.dto.DeliveryDto;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Slf4j
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/v1/delivery")

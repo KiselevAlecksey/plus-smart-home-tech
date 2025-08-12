@@ -10,6 +10,7 @@ import ru.yandex.practicum.commerce.interactionapi.dto.DeliveryDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.OrderDto;
 import ru.yandex.practicum.commerce.interactionapi.enums.DeliveryState;
 import ru.yandex.practicum.commerce.interactionapi.exception.NoDeliveryFoundException;
+import ru.yandex.practicum.commerce.interactionapi.feign.OrderFeignClient;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,6 +32,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     AddressRepository addressRepository;
     DeliveryRepository deliveryRepository;
     DeliveryMapper deliveryMapper;
+    OrderFeignClient orderFeignClient;
     BigDecimal baseCostDelivery = BigDecimal.valueOf(5.0);
 
     @Override
@@ -70,22 +72,16 @@ public class DeliveryServiceImpl implements DeliveryService {
     public void deliveryFailed(UUID deliveryId) {
         Delivery delivery = getDeliveryOrThrow(deliveryId);
         delivery.setState(DeliveryState.FAILED);
+        orderFeignClient.deliveryFailedOrder(delivery.getOrderId());
         deliveryRepository.save(delivery);
     }
 
     @Override
     public BigDecimal deliveryCost(OrderDto orderDto) {
         BigDecimal deliveryCost = baseCostDelivery;
-        List<Address> addresses = addressRepository.findByDeliveryId(orderDto.deliveryId());
-        Address addressFrom = addresses.stream()
-                .filter(Address::getIsWarehouse)
-                .findFirst()
-                .orElseThrow();
-
-        Address addressTo = addresses.stream()
-                .filter(address -> !address.getIsWarehouse())
-                .findFirst()
-                .orElseThrow();
+        Delivery delivery = getDeliveryOrThrow(orderDto.deliveryId());
+        Address addressFrom = delivery.getFromAddress();
+        Address addressTo = delivery.getToAddress();
 
         if (isAddressEqualsAddress1(addressFrom)) {
             deliveryCost = deliveryCost.multiply(BigDecimal.valueOf(ADDRESS_COEFFICIENT1));

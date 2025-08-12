@@ -15,12 +15,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@ToString
+@ToString(exclude = "bookings")
 public class ProductInWarehouse {
 
     @Id
     @Column(name = "product_id", updatable = false, nullable = false)
-    private UUID productId;
+    private UUID id;
 
     @Column(name = "quantity", nullable = false)
     private Long quantity;
@@ -39,9 +39,6 @@ public class ProductInWarehouse {
 
     @Column(name = "weight", nullable = false)
     private double weight;
-
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
 
     @OneToMany(mappedBy = "productInWarehouse", fetch = FetchType.LAZY)
     @Builder.Default

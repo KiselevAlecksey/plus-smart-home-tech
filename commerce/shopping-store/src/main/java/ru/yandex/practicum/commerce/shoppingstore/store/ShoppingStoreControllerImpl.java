@@ -50,28 +50,28 @@ public class ShoppingStoreControllerImpl implements ShoppingStoreController {
     @PutMapping
     @RestLogging
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductFullResponseDto createProduct(@RequestBody @Validated ProductCreateDto createDto) {
+    public ProductFullResponseDto createProduct(ProductCreateDto createDto) {
         return storeService.createProduct(createDto);
     }
 
     @Override
     @PostMapping
     @RestLogging
-    public ProductFullResponseDto updateProduct(@RequestBody @Validated ProductUpdateDto updateDto) {
+    public ProductFullResponseDto updateProduct(ProductUpdateDto updateDto) {
         return storeService.updateProduct(updateDto);
     }
 
     @Override
     @PostMapping("/removeProductFromStore")
     @RestLogging
-    public boolean removeProductFromStore(@RequestBody UUID productId) {
+    public boolean removeProductFromStore(UUID productId) {
         return storeService.removeProductFromStore(productId);
     }
 
     @Override
     @PostMapping("/quantityState")
     @RestLogging
-    public boolean setProductQuantityState(@RequestParam UUID productId, @RequestParam String quantityState) {
+    public boolean setProductQuantityState(UUID productId, String quantityState) {
         QuantityState state = QuantityState.from(quantityState.toUpperCase())
                 .orElseThrow(() -> new IllegalArgumentException("Не поддерживаемое состояние: " + quantityState));
 
@@ -94,6 +94,6 @@ public class ShoppingStoreControllerImpl implements ShoppingStoreController {
     @GetMapping("/products")
     @RestLogging
     public Map<UUID, BigDecimal> getByProductIds(@RequestBody Set<UUID> productIds) {
-        return storeService.getByProductIds(productIds);
+        return storeService.getPriceMapByProductIds(productIds);
     }
 }

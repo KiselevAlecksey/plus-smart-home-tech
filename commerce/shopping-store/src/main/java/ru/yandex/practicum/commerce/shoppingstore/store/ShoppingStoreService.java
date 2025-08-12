@@ -28,6 +28,6 @@ public interface ShoppingStoreService {
 
     ProductFullResponseDto getByProductId(String productId);
 
-    Map<UUID, BigDecimal> getByProductIds(Set<UUID> productId);
+    Map<UUID, BigDecimal> getPriceMapByProductIds(Set<UUID> productId);
 
 }

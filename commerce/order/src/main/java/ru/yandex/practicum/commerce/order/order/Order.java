@@ -55,12 +55,12 @@ public class Order {
     @Column(name = "fragile")
     boolean fragile;
 
-    @Column(name = "price", precision = 10, scale = 2)
+    @Column(name = "total_price", precision = 10, scale = 2)
     BigDecimal totalPrice;
 
-    @Column(name = "price", precision = 10, scale = 2)
+    @Column(name = "delivery_price", precision = 10, scale = 2)
     BigDecimal deliveryPrice;
 
-    @Column(name = "price", precision = 10, scale = 2)
+    @Column(name = "product_price", precision = 10, scale = 2)
     BigDecimal productPrice;
 }

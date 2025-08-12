@@ -36,7 +36,7 @@ public class Address {
     @Column(name = "flat")
     String flat;
 
-    @Column(name = "iswarehouse")
+    @Column(name = "is_warehouse")
     Boolean isWarehouse;
 
     @OneToMany(mappedBy = "fromAddress")

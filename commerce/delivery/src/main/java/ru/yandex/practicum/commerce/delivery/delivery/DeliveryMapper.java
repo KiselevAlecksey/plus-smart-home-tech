@@ -17,11 +17,13 @@ public interface DeliveryMapper {
     @Mapping(target = "toAddress", source = "toAddress")
     DeliveryDto toDto(Delivery entity);
 
+    @Named("toFromAddress")
     @Mapping(target = "fromDeliveries", ignore = true)
     @Mapping(target = "toDeliveries", ignore = true)
     @Mapping(target = "isWarehouse", constant = "true")
     Address toFromAddressEntity(AddressDto dto);
 
+    @Named("toToAddress")
     @Mapping(target = "fromDeliveries", ignore = true)
     @Mapping(target = "toDeliveries", ignore = true)
     @Mapping(target = "isWarehouse", ignore = true)

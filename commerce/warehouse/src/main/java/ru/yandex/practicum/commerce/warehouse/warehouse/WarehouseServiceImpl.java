@@ -13,9 +13,9 @@ import ru.yandex.practicum.commerce.interactionapi.exception.ProductInShoppingCa
 import ru.yandex.practicum.commerce.interactionapi.exception.ProductNotFoundException;
 import ru.yandex.practicum.commerce.interactionapi.feign.DeliveryFeignClient;
 
-import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -79,7 +79,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     @Transactional
     public BookedProductsDto assembly(AssemblyProductsForOrderRequest request) {
         Map<UUID, ProductInWarehouse> orderProductsMap = request.products().stream()
-                .collect(Collectors.toMap(ProductDto::productId, productInWarehouseMapper::toEntity));
+                .collect(Collectors.toMap(ProductDto::id, productInWarehouseMapper::toEntity));
         Set<ProductInWarehouse> products = getProductsSetFromDto(request.products().stream());
         Map<UUID, ProductInWarehouse> warehouseProductsMap = getWarehouseProductsMap(products);
 
@@ -107,7 +107,7 @@ public class WarehouseServiceImpl implements WarehouseService {
         request.products().forEach(productDto -> {
             BookedProductItem.builder()
                     .orderBooking(booking)
-                    .productInWarehouse(warehouseProductsMap.get(productDto.productId()))
+                    .productInWarehouse(warehouseProductsMap.get(productDto.id()))
                     .quantity(productDto.quantity())
                     .build();
         });
@@ -125,7 +125,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
         List<ProductInWarehouse> productsToUpdate = productDtos.stream()
                 .map(dto -> {
-                    ProductInWarehouse product = warehouseProducts.get(dto.productId());
+                    ProductInWarehouse product = warehouseProducts.get(dto.id());
                     long newQuantity = product.getQuantity() + dto.quantity();
                     return product.toBuilder()
                             .quantity(newQuantity)
@@ -155,7 +155,7 @@ public class WarehouseServiceImpl implements WarehouseService {
         checkProductsInWarehouseOrThrow(warehouseProducts, productsInCart);
 
         productsInCart.forEach(cartProduct -> {
-            ProductInWarehouse product = warehouseProducts.get(cartProduct.getProductId());
+            ProductInWarehouse product = warehouseProducts.get(cartProduct.getId());
             if (product == null || product.getQuantity() < cartProduct.getQuantity()) {
                 throwInsufficientQuantityException(cartProduct, product);
             }
@@ -168,7 +168,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     ) {
         throw ProductInShoppingCartLowQuantityInWarehouse.builder()
                 .message("Недостаточно товара на складе")
-                .userMessage("Товара " + cartProduct.getProductId()
+                .userMessage("Товара " + cartProduct.getId()
                         + " недостаточно на складе. Доступно: "
                         + (warehouseProduct != null ? warehouseProduct.getQuantity() : null)
                         + ", требуется: " + cartProduct.getQuantity())
@@ -193,11 +193,15 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     private Map<UUID, ProductInWarehouse> getWarehouseProductsMap(Set<ProductInWarehouse> productsInCart) {
-        return warehouseRepository.findByProductIdIn(
+        return warehouseRepository.findByIdIn(
                 productsInCart.stream()
-                        .map(ProductInWarehouse::getProductId)
+                        .map(ProductInWarehouse::getId)
                         .collect(Collectors.toList())
-        );
+                ).stream()
+                .collect(Collectors.toMap(
+                        ProductInWarehouse::getId,
+                        Function.identity())
+                );
     }
 
     private Set<ProductInWarehouse> getProductsSetFromDto(Stream<ProductDto> stream) {
@@ -230,7 +234,7 @@ public class WarehouseServiceImpl implements WarehouseService {
             Map<UUID, ProductInWarehouse> warehouseMap,
             ProductInWarehouse cartProduct
     ) {
-        ProductInWarehouse warehouseProduct = warehouseMap.get(cartProduct.getProductId());
+        ProductInWarehouse warehouseProduct = warehouseMap.get(cartProduct.getId());
 
         return warehouseProduct.toBuilder()
                 .quantity(cartProduct.getQuantity())

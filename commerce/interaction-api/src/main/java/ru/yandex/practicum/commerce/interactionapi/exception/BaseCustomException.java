@@ -1,6 +1,5 @@
 package ru.yandex.practicum.commerce.interactionapi.exception;
 
-import lombok.Builder;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
@@ -16,7 +15,6 @@ public abstract class BaseCustomException extends RuntimeException {
     private final List<StackTraceElement> stackTraceElements;
     private final List<Throwable> suppressedExceptions;
 
-    @Builder
     protected BaseCustomException(
             String message,
             String userMessage,
