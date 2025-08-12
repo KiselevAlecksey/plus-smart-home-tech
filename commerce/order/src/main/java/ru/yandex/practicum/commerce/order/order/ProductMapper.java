@@ -22,11 +22,11 @@ public interface ProductMapper {
     @Mapping(target = "quantity", source = "quantity")
     CartProduct toEntityProduct(ProductDto dto);
 
-    @Mapping(target = "productId", source = "id")
+    @Mapping(target = "productId", source = "productId")
     @Mapping(target = "quantity", source = "newQuantity")
     CartProduct toEntityFromChangeDto(ProductQuantityDto dto);
 
-    @Mapping(target = "id", source = "productId")
+    @Mapping(target = "productId", source = "productId")
     @Mapping(target = "newQuantity", source = "quantity")
     ProductQuantityDto toDto(CartProduct product);
 }
