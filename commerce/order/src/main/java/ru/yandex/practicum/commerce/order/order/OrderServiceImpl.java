@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.commerce.interactionapi.dto.DeliveryDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.PaymentDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.CreateNewOrderRequest;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.OrderDto;
@@ -15,6 +16,7 @@ import ru.yandex.practicum.commerce.interactionapi.dto.order.ProductReturnReques
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.AssemblyProductsForOrderRequest;
 import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.BookedProductsDto;
+import ru.yandex.practicum.commerce.interactionapi.enums.DeliveryState;
 import ru.yandex.practicum.commerce.interactionapi.enums.OrderState;
 import ru.yandex.practicum.commerce.interactionapi.exception.NoOrderFoundException;
 import ru.yandex.practicum.commerce.interactionapi.feign.DeliveryFeignClient;
@@ -47,24 +49,38 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto createOrder(CreateNewOrderRequest request) {
+
         Order order = Order.builder()
                 .shoppingCartId(request.shoppingCart().shoppingCartId())
-                .products((request.shoppingCart().products().stream()
-                        .map(productMapper::toEntityProduct)
-                        .collect(Collectors.toSet())))
                 .state(OrderState.NEW)
                 .userName(request.userName())
-                .address(orderMapper.toAddress(request.deliveryAddress()))
+                .paymentId(UUID.randomUUID())
+                .deliveryId(UUID.randomUUID())
                 .build();
 
-        return orderMapper.toOrderDto(order);
+        Set<CartProduct> cartProducts = request.shoppingCart().products().stream()
+                .map(productMapper::toEntityProduct)
+                .peek(cp -> cp.setOrder(order))
+                .peek(cp -> cp.setShoppingCartId(order.getShoppingCartId()))
+                .collect(Collectors.toSet());
+
+        Address address = orderMapper.toAddress(request.deliveryAddress());
+        address.setOrder(order);
+
+        order.setProducts(cartProducts);
+        order.setAddress(address);
+
+        Order orderSaved = orderRepository.save(order);
+
+        return orderMapper.toOrderDto(orderSaved);
     }
 
     @Override
     public OrderDto returnOrder(ProductReturnRequest returnRequest) {
         Map<UUID, CartProduct> productDtoMap = returnRequest.products().stream()
-                .collect(Collectors.toMap(ProductDto::id, productMapper::toEntityProduct));
+                .collect(Collectors.toMap(ProductDto::productId, productMapper::toEntityProduct));
 
         Order order = getOrder(returnRequest.orderId());
 
@@ -75,11 +91,7 @@ public class OrderServiceImpl implements OrderService {
                         .collect(Collectors.toSet())
         );
 
-        order.setProducts(
-                order.getProducts().stream()
-                .filter(p -> !p.equals(productDtoMap.get(p.getProductId())))
-                .collect(Collectors.toSet())
-        );
+        order.getProducts().removeIf(p -> p.equals(productDtoMap.get(p.getProductId())));
 
         OrderDto dto = orderMapper.toOrderDto(order);
 
@@ -186,13 +198,22 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderDto calculateDeliveryOrder(UUID orderId) {
         Order order = getOrder(orderId);
+
+        order.setDeliveryId(deliveryFeignClient.planDelivery(DeliveryDto.builder()
+                        .fromAddress(warehouseFeignClient.getAddressWarehouse())
+                        .toAddress(orderMapper.toAddressDto(order.getAddress()))
+                        .orderId(orderId)
+                        .deliveryState(DeliveryState.CREATED)
+                        .build())
+                .deliveryId()
+        );
+
         BigDecimal deliveryCost = deliveryFeignClient.deliveryCost(orderMapper.toOrderDto(order));
 
         return orderMapper.toOrderDto(
                 orderRepository.saveAndFlush(
                         order.toBuilder()
                                 .deliveryPrice(deliveryCost)
-                                .deliveryId(deliveryFeignClient.getDeliveryId(String.valueOf(orderId)))
                                 .build()
                 )
         );

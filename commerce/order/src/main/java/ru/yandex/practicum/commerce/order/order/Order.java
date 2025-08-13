@@ -20,16 +20,17 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Order {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "order_id", updatable = false, nullable = false)
-    UUID orderId;
+    UUID id;
 
     @Column(name = "shopping_cart_id", nullable = false)
     UUID shoppingCartId;
 
-    @Column(name = "payment_id", nullable = false)
+    @Column(name = "payment_id", nullable = false, columnDefinition = "UUID DEFAULT gen_random_uuid()")
     UUID paymentId;
 
-    @Column(name = "delivery_id", nullable = false)
+    @Column(name = "delivery_id", nullable = false, columnDefinition = "UUID DEFAULT gen_random_uuid()")
     UUID deliveryId;
 
     @Column(name = "user_name", nullable = false)
@@ -46,21 +47,21 @@ public class Order {
     @Column(name = "state", nullable = false)
     OrderState state;
 
-    @Column(name = "delivery_weight")
-    double deliveryWeight;
+    @Column(name = "delivery_weight", precision = 12, scale = 2)
+    BigDecimal deliveryWeight;
 
-    @Column(name = "delivery_volume")
-    double deliveryVolume;
+    @Column(name = "delivery_volume", precision = 12, scale = 2)
+    BigDecimal deliveryVolume;
 
     @Column(name = "fragile")
     boolean fragile;
 
-    @Column(name = "total_price", precision = 10, scale = 2)
+    @Column(name = "total_price", precision = 12, scale = 2)
     BigDecimal totalPrice;
 
-    @Column(name = "delivery_price", precision = 10, scale = 2)
+    @Column(name = "delivery_price", precision = 12, scale = 2)
     BigDecimal deliveryPrice;
 
-    @Column(name = "product_price", precision = 10, scale = 2)
+    @Column(name = "product_price", precision = 12, scale = 2)
     BigDecimal productPrice;
 }

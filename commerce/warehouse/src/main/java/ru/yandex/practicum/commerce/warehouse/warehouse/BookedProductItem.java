@@ -15,6 +15,7 @@ import java.util.UUID;
 public class BookedProductItem {
 
     @Id
+    @Column(name = "booked_item_id")
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 

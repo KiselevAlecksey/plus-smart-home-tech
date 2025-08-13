@@ -16,6 +16,7 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 public class OrderBooking {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "order_booking_id", updatable = false, nullable = false)
     private UUID id;
 
@@ -28,9 +29,4 @@ public class OrderBooking {
     @OneToMany(mappedBy = "orderBooking", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<BookedProductItem> bookedItems = new HashSet<>();
-
-    public void addBookedItem(BookedProductItem item) {
-        bookedItems.add(item);
-        item.setOrderBooking(this);
-    }
 }

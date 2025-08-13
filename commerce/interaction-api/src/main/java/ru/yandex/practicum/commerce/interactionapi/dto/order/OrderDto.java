@@ -8,6 +8,8 @@ import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
 import ru.yandex.practicum.commerce.interactionapi.enums.OrderState;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,8 +21,13 @@ public record OrderDto(
         UUID paymentId,
         UUID deliveryId,
         OrderState state,
-        double deliveryWeight,
-        double deliveryVolume,
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING)
+        BigDecimal deliveryWeight,
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING)
+        BigDecimal deliveryVolume,
+
         boolean fragile,
 
         @NotNull
@@ -35,4 +42,12 @@ public record OrderDto(
         @JsonFormat(shape = JsonFormat.Shape.STRING)
         BigDecimal productPrice
 ) {
+        public OrderDto {
+                totalPrice = totalPrice != null ? totalPrice.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+                deliveryPrice = deliveryPrice != null ? deliveryPrice.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+                productPrice = productPrice != null ? productPrice.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+
+                deliveryWeight = deliveryWeight != null ? deliveryWeight.setScale(2, RoundingMode.HALF_UP) : null;
+                deliveryVolume = deliveryVolume != null ? deliveryVolume.setScale(2, RoundingMode.HALF_UP) : null;
+        }
 }

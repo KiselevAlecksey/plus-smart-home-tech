@@ -1,6 +1,5 @@
 package ru.yandex.practicum.commerce.order.order;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,25 +37,25 @@ public class OrderControllerImpl implements OrderController {
     @Override
     @PutMapping
     @RestLogging
-    public OrderDto createOrder(@RequestBody @Valid CreateNewOrderRequest newOrderRequest) {
+    public OrderDto createOrder(CreateNewOrderRequest newOrderRequest) {
         return orderService.createOrder(newOrderRequest);
     }
 
     @Override
     @RestLogging
-    public OrderDto returnOrder(@RequestBody @Valid ProductReturnRequest returnRequest) {
+    public OrderDto returnOrder(ProductReturnRequest returnRequest) {
         return orderService.returnOrder(returnRequest);
     }
 
     @Override
     @RestLogging
-    public OrderDto paymentOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto paymentOrder(UUID orderId) {
         return orderService.paymentOrder(orderId);
     }
 
     @Override
     @RestLogging
-    public OrderDto paymentFailedOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto paymentFailedOrder(UUID orderId) {
         return orderService.paymentFailedOrder(orderId);
     }
 
@@ -67,43 +66,43 @@ public class OrderControllerImpl implements OrderController {
 
     @Override
     @RestLogging
-    public OrderDto deliveryOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto deliveryOrder(UUID orderId) {
         return orderService.deliveryOrder(orderId);
     }
 
     @Override
     @RestLogging
-    public OrderDto deliveryFailedOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto deliveryFailedOrder(UUID orderId) {
         return orderService.deliveryFailedOrder(orderId);
     }
 
     @Override
     @RestLogging
-    public OrderDto completedOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto completedOrder(UUID orderId) {
         return orderService.completedOrder(orderId);
     }
 
     @Override
     @RestLogging
-    public OrderDto calculateTotalOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto calculateTotalOrder(UUID orderId) {
         return orderService.calculateTotalOrder(orderId);
     }
 
     @Override
     @RestLogging
-    public OrderDto calculateDeliveryOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto calculateDeliveryOrder(UUID orderId) {
         return orderService.calculateDeliveryOrder(orderId);
     }
 
     @Override
     @RestLogging
-    public OrderDto assemblyOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto assemblyOrder(UUID orderId) {
         return orderService.assemblyOrder(orderId);
     }
 
     @Override
     @RestLogging
-    public OrderDto assemblyFailedOrder(@RequestBody @NotBlank UUID orderId) {
+    public OrderDto assemblyFailedOrder(UUID orderId) {
         return orderService.assemblyFailedOrder(orderId);
     }
 }

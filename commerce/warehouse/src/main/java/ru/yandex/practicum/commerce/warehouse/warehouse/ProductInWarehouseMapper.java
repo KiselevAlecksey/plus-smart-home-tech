@@ -17,7 +17,7 @@ public interface ProductInWarehouseMapper {
     @Mapping(target = "quantity", constant = "0L")
     ProductInWarehouse toEntity(NewProductInWarehouseRequestDto request);
 
-    @Mapping(target = "id", source = "response.id")
+    @Mapping(target = "id", source = "response.productId")
     @Mapping(target = "quantity", source = "response.quantity")
     @Mapping(target = "fragile", ignore = true)
     @Mapping(target = "width", ignore = true)

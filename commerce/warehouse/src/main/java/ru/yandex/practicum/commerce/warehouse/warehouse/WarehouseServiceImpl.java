@@ -13,6 +13,8 @@ import ru.yandex.practicum.commerce.interactionapi.exception.ProductInShoppingCa
 import ru.yandex.practicum.commerce.interactionapi.exception.ProductNotFoundException;
 import ru.yandex.practicum.commerce.interactionapi.feign.DeliveryFeignClient;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.function.Function;
@@ -79,7 +81,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     @Transactional
     public BookedProductsDto assembly(AssemblyProductsForOrderRequest request) {
         Map<UUID, ProductInWarehouse> orderProductsMap = request.products().stream()
-                .collect(Collectors.toMap(ProductDto::id, productInWarehouseMapper::toEntity));
+                .collect(Collectors.toMap(ProductDto::productId, productInWarehouseMapper::toEntity));
         Set<ProductInWarehouse> products = getProductsSetFromDto(request.products().stream());
         Map<UUID, ProductInWarehouse> warehouseProductsMap = getWarehouseProductsMap(products);
 
@@ -107,7 +109,7 @@ public class WarehouseServiceImpl implements WarehouseService {
         request.products().forEach(productDto -> {
             BookedProductItem.builder()
                     .orderBooking(booking)
-                    .productInWarehouse(warehouseProductsMap.get(productDto.id()))
+                    .productInWarehouse(warehouseProductsMap.get(productDto.productId()))
                     .quantity(productDto.quantity())
                     .build();
         });
@@ -125,7 +127,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
         List<ProductInWarehouse> productsToUpdate = productDtos.stream()
                 .map(dto -> {
-                    ProductInWarehouse product = warehouseProducts.get(dto.id());
+                    ProductInWarehouse product = warehouseProducts.get(dto.productId());
                     long newQuantity = product.getQuantity() + dto.quantity();
                     return product.toBuilder()
                             .quantity(newQuantity)
@@ -193,15 +195,20 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     private Map<UUID, ProductInWarehouse> getWarehouseProductsMap(Set<ProductInWarehouse> productsInCart) {
-        return warehouseRepository.findByIdIn(
+
+        List<ProductInWarehouse> products = warehouseRepository.findByIdIn(
                 productsInCart.stream()
                         .map(ProductInWarehouse::getId)
                         .collect(Collectors.toList())
-                ).stream()
+        );
+
+        Map<UUID, ProductInWarehouse> warehouseProductsMap = products.stream()
                 .collect(Collectors.toMap(
                         ProductInWarehouse::getId,
-                        Function.identity())
+                        Function.identity(),
+                        (existing, replacement) -> existing)
                 );
+        return warehouseProductsMap;
     }
 
     private Set<ProductInWarehouse> getProductsSetFromDto(Stream<ProductDto> stream) {
@@ -212,8 +219,8 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     private static BookedProductsDto getDefaultBookedProductsDto() {
         return BookedProductsDto.builder()
-                .deliveryWeight(0.0)
-                .deliveryVolume(0.0)
+                .deliveryWeight(BigDecimal.ZERO)
+                .deliveryVolume(BigDecimal.ZERO)
                 .fragile(false)
                 .build();
     }
@@ -242,16 +249,30 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     private static BookedProductsDto computeDeliveryMetrics(List<ProductInWarehouse> products) {
-        double totalWeight = 0.0;
-        double totalVolume = 0.0;
+        BigDecimal totalWeight = BigDecimal.ZERO;
+        BigDecimal totalVolume = BigDecimal.ZERO;
         boolean anyFragile = false;
 
         for (ProductInWarehouse product : products) {
-            totalWeight += product.getWeight() * product.getQuantity();
-            totalVolume += product.getWidth() * product.getHeight()
-                    * product.getDepth() * product.getQuantity();
+            BigDecimal productWeight = BigDecimal.valueOf(product.getWeight());
+            BigDecimal productVolume = BigDecimal.valueOf(product.getWidth())
+                    .multiply(BigDecimal.valueOf(product.getHeight()))
+                    .multiply(BigDecimal.valueOf(product.getDepth()))
+                    .setScale(2, RoundingMode.HALF_UP);
+
+            totalWeight = totalWeight.add(
+                    productWeight.multiply(BigDecimal.valueOf(product.getQuantity()))
+            ).setScale(2, RoundingMode.HALF_UP);
+
+            totalVolume = totalVolume.add(
+                    productVolume.multiply(BigDecimal.valueOf(product.getQuantity()))
+            ).setScale(2, RoundingMode.HALF_UP);
+
             anyFragile = anyFragile || product.isFragile();
         }
+
+        totalVolume = totalVolume.divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.HALF_UP);
+        totalWeight = totalWeight.divide(BigDecimal.valueOf(1000), 2, RoundingMode.HALF_UP);
 
         return BookedProductsDto.builder()
                 .deliveryWeight(totalWeight)

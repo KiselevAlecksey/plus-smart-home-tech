@@ -19,7 +19,7 @@ public interface ProductMapper {
     CartProduct toEntityProduct(ProductResponseDto dto);
 
     @Mapping(target = "shoppingCart", ignore = true)
-    @Mapping(target = "productId", source = "id")
+    @Mapping(target = "productId", source = "productId")
     @Mapping(target = "quantity", source = "quantity")
     CartProduct toEntityProduct(ProductDto dto);
 

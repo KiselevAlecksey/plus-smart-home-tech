@@ -17,6 +17,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Delivery {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "delivery_id", updatable = false, nullable = false)
     UUID deliveryId;
 

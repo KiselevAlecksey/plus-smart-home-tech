@@ -4,18 +4,18 @@ CREATE SCHEMA IF NOT EXISTS shopping_store;
 
 -- Таблица: orders (заказы)
 CREATE TABLE IF NOT EXISTS shopping_store.orders (
-    order_id UUID PRIMARY KEY NOT NULL,
+    order_id UUID DEFAULT gen_random_uuid() PRIMARY KEY NOT NULL,
     shopping_cart_id UUID NOT NULL,
-    user_name VARCHAR(256) NOT NULL UNIQUE,
-    payment_id UUID NOT NULL,
-    delivery_id UUID NOT NULL,
+    user_name VARCHAR(256) NOT NULL,
+    payment_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    delivery_id UUID NOT NULL DEFAULT gen_random_uuid(),
     state VARCHAR(128) NOT NULL,
     fragile BOOLEAN NOT NULL DEFAULT false,
-    delivery_weight FLOAT8 NOT NULL,
-    delivery_volume FLOAT8 NOT NULL,
-    total_price NUMERIC(12, 2) NOT NULL,
-    delivery_price NUMERIC(12, 2) NOT NULL,
-    product_price NUMERIC(12, 2) NOT NULL
+    delivery_weight NUMERIC(12, 2),
+    delivery_volume NUMERIC(12, 2),
+    total_price NUMERIC(12, 2),
+    delivery_price NUMERIC(12, 2),
+    product_price NUMERIC(12, 2)
 );
 
 COMMENT ON TABLE shopping_store.orders IS 'Содержит информацию о заказах';
@@ -32,24 +32,23 @@ COMMENT ON COLUMN shopping_store.orders.delivery_price IS 'Цена достав
 COMMENT ON COLUMN shopping_store.orders.product_price IS 'Цена товара';
 
 -- Таблица: cart_products (товары в корзинах)
-CREATE TABLE IF NOT EXISTS shopping_store.cart_products (
-    product_id UUID PRIMARY KEY NOT NULL,
+CREATE TABLE IF NOT EXISTS shopping_store.order_cart_products (
+    cart_product_id UUID DEFAULT gen_random_uuid() PRIMARY KEY NOT NULL,
+    product_id UUID NOT NULL,
     order_id UUID NOT NULL,
-    shopping_cart_id UUID,
+    shopping_cart_id UUID ,
     quantity BIGINT NOT NULL,
-    price NUMERIC(12, 2) NOT NULL,
-    CONSTRAINT pk_cart_products PRIMARY KEY (product_id),
-    CONSTRAINT fk_shopping_cart
+    price NUMERIC(12, 2),
+    CONSTRAINT fk_order
         FOREIGN KEY (order_id)
         REFERENCES shopping_store.orders(order_id)
-        ON DELETE CASCADE,
-    CONSTRAINT unique_cart_product UNIQUE (order_id, product_id)
+        ON DELETE CASCADE
 );
 
-COMMENT ON TABLE shopping_store.cart_products IS 'Содержит информацию о товарах в корзинах';
-COMMENT ON COLUMN shopping_store.cart_products.product_id IS 'Уникальный идентификатор товара в корзине';
-COMMENT ON COLUMN shopping_store.cart_products.shopping_cart_id IS 'Ссылка на корзину';
-COMMENT ON COLUMN shopping_store.cart_products.quantity IS 'Количество данного товара в корзине';
+COMMENT ON TABLE shopping_store.order_cart_products IS 'Содержит информацию о товарах в корзинах';
+COMMENT ON COLUMN shopping_store.order_cart_products.product_id IS 'Уникальный идентификатор товара в корзине';
+COMMENT ON COLUMN shopping_store.order_cart_products.shopping_cart_id IS 'Ссылка на корзину';
+COMMENT ON COLUMN shopping_store.order_cart_products.quantity IS 'Количество данного товара в корзине';
 
 CREATE TABLE IF NOT EXISTS shopping_store.addresses (
     address_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

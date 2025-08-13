@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
 
+    @Mapping(target = "orderId", source = "id")
     @Mapping(target = "products", expression = "java(mapCartProductsToProductDtos(order.getProducts()))")
     OrderDto toOrderDto(Order order);
 
@@ -43,7 +44,7 @@ public interface OrderMapper {
         return productDtos.stream()
                 .map(productDto -> {
                     CartProduct cartProduct = new CartProduct();
-                    cartProduct.setProductId(productDto.id());
+                    cartProduct.setProductId(productDto.productId());
                     cartProduct.setQuantity(productDto.quantity());
                     return cartProduct;
                 })

@@ -1,7 +1,6 @@
 package ru.yandex.practicum.commerce.interactionapi.feign;
 
 
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -11,15 +10,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.commerce.interactionapi.aspect.RestLogging;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductCreateDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductFullResponseDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductUpdateDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.*;
 
 
-import java.math.BigDecimal;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 public interface ShoppingStoreController {
@@ -31,7 +24,7 @@ public interface ShoppingStoreController {
 
 
     @PutMapping
-    @CachePut(value = "product", key = "#result.id")
+    @CachePut(value = "product", key = "#result.productId")
     @ResponseStatus(HttpStatus.CREATED)
     ProductFullResponseDto createProduct(@RequestBody @Validated ProductCreateDto createDto);
 
@@ -52,6 +45,6 @@ public interface ShoppingStoreController {
     @Cacheable(value = "product", key = "#productId")
     ProductFullResponseDto getByProductId(@PathVariable String productId);
 
-    @GetMapping("/products")
-    Map<UUID, BigDecimal> getByProductIds(@RequestBody Set<UUID> productIds);
+    @PostMapping("/products")
+    ProductPriceDto fetchProductPricesByIds(@RequestBody ProductIdsDto dto);
 }

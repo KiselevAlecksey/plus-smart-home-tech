@@ -6,9 +6,11 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.interactionapi.dto.PaymentDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.OrderDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductIdsDto;
 import ru.yandex.practicum.commerce.interactionapi.exception.BaseCustomException;
 import ru.yandex.practicum.commerce.interactionapi.exception.NoOrderFoundException;
 import ru.yandex.practicum.commerce.interactionapi.feign.DeliveryFeignClient;
@@ -16,12 +18,15 @@ import ru.yandex.practicum.commerce.interactionapi.feign.OrderFeignClient;
 import ru.yandex.practicum.commerce.interactionapi.feign.ShoppingStoreFeignClient;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PaymentServiceImpl implements PaymentService {
@@ -39,9 +44,12 @@ public class PaymentServiceImpl implements PaymentService {
                 .deliveryTotal(dto.deliveryPrice())
                 .feeTotal(calculateFee(dto.productPrice()))
                 .state(PaymentStatus.PENDING)
+                .orderId(dto.orderId())
                 .build();
 
-        return paymentMapper.toPaymentDto(paymentRepository.save(payment));
+        Payment p = paymentRepository.save(payment);
+
+        return paymentMapper.toPaymentDto(p);
     }
 
     @Override
@@ -60,12 +68,12 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public BigDecimal totalCost(OrderDto dto) {
         BigDecimal fee = calculateFee(dto.productPrice());
-        return dto.productPrice().add(fee).add(deliveryFeignClient.deliveryCost(dto));
+        return dto.productPrice().add(fee).add(deliveryFeignClient.deliveryCost(dto)).setScale(2, RoundingMode.HALF_UP);
     }
 
     @Cacheable(value = "fee", key = "#productPrice")
     private static BigDecimal calculateFee(BigDecimal productPrice) {
-        return productPrice.multiply(BigDecimal.valueOf(PERCENT_FEE));
+        return productPrice.multiply(BigDecimal.valueOf(PERCENT_FEE)).setScale(2, RoundingMode.HALF_UP);
     }
 
 
@@ -87,10 +95,13 @@ public class PaymentServiceImpl implements PaymentService {
     @Cacheable(value = "productCost", key = "#dto.orderId")
     public BigDecimal productCost(OrderDto dto) {
         Map<UUID, Long> productMap = dto.products().stream()
-                .collect(Collectors.toMap(ProductDto::id, ProductDto::quantity));
+                .collect(Collectors.toMap(ProductDto::productId, ProductDto::quantity));
+        Set<UUID> products = productMap.keySet();
 
-        Map<UUID, BigDecimal> uuidPriceProducts = storeFeignClient.getByProductIds(productMap.keySet());
+        Map<UUID, BigDecimal> uuidPriceProducts = storeFeignClient.fetchProductPricesByIds(
+                new ProductIdsDto(products)).productPricesMap();
 
+        System.out.println(uuidPriceProducts);
         Map<UUID, BigDecimal> totalPrices = productMap.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,

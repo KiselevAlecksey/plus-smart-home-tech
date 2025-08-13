@@ -9,35 +9,28 @@ import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.AddressDto;
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface DeliveryMapper {
 
-    @Mapping(target = "fromAddress", source = "fromAddress")
-    @Mapping(target = "toAddress", source = "toAddress")
+    @Mapping(target = "fromAddress", ignore = true)
+    @Mapping(target = "toAddress", ignore = true)
+    @Mapping(target = "state", source = "deliveryState")
     Delivery toEntity(DeliveryDto dto);
 
     @Mapping(target = "fromAddress", source = "fromAddress")
     @Mapping(target = "toAddress", source = "toAddress")
+    @Mapping(target = "deliveryState", source = "state")
     DeliveryDto toDto(Delivery entity);
 
     @Named("toFromAddress")
     @Mapping(target = "fromDeliveries", ignore = true)
     @Mapping(target = "toDeliveries", ignore = true)
-    @Mapping(target = "isWarehouse", constant = "true")
+    @Mapping(target = "id", ignore = true)
     Address toFromAddressEntity(AddressDto dto);
 
     @Named("toToAddress")
     @Mapping(target = "fromDeliveries", ignore = true)
     @Mapping(target = "toDeliveries", ignore = true)
-    @Mapping(target = "isWarehouse", ignore = true)
+    @Mapping(target = "id", ignore = true)
     Address toToAddressEntity(AddressDto dto);
 
     AddressDto toAddressDto(Address entity);
 
-    @AfterMapping
-    default void afterDeliveryMapping(@MappingTarget Delivery entity) {
-        if (entity.getFromAddress() != null) {
-            entity.getFromAddress().getFromDeliveries().add(entity);
-        }
-        if (entity.getToAddress() != null) {
-            entity.getToAddress().getToDeliveries().add(entity);
-        }
-    }
 }

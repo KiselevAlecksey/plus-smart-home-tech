@@ -12,7 +12,8 @@ import ru.yandex.practicum.commerce.interactionapi.exception.ErrorHandler;
 @SpringBootApplication
 @EnableFeignClients(basePackages = "ru.yandex.practicum.commerce.interactionapi.feign")
 @EnableAspectJAutoProxy
-@Import({ErrorHandler.class, RestLoggingAspect.class, CommonConfig.class})public class ShoppingStoreApp {
+@Import({ErrorHandler.class, RestLoggingAspect.class, CommonConfig.class})
+public class ShoppingStoreApp {
     public static void main(String[] args) {
         SpringApplication.run(ShoppingStoreApp.class, args);
     }

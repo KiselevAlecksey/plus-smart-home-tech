@@ -3,14 +3,15 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE SCHEMA IF NOT EXISTS shopping_store;
 
 -- Таблица адресов
-CREATE TABLE IF NOT EXISTS shopping_store.addresses (
+CREATE TABLE IF NOT EXISTS shopping_store.delivery_addresses (
     address_id UUID DEFAULT gen_random_uuid() PRIMARY KEY NOT NULL,
     country VARCHAR(100) NOT NULL,
     city VARCHAR(100) NOT NULL,
     street VARCHAR(100) NOT NULL,
     house VARCHAR(20) NOT NULL,
-    flat VARCHAR(20),
-    is_warehouse BOOLEAN NOT NULL DEFAULT false
+    flat VARCHAR(20) NOT NULL,
+    CONSTRAINT uc_delivery_address_unique_fields
+        UNIQUE (country, city, street, house, flat)
 );
 
 -- Таблица доставок
@@ -21,11 +22,9 @@ CREATE TABLE IF NOT EXISTS shopping_store.deliveries (
     order_id UUID NOT NULL,
     state VARCHAR(20) NOT NULL,
     CONSTRAINT fk_from_address FOREIGN KEY (from_address_id)
-        REFERENCES shopping_store.addresses(address_id),
+        REFERENCES shopping_store.delivery_addresses(address_id),
     CONSTRAINT fk_to_address FOREIGN KEY (to_address_id)
-        REFERENCES shopping_store.addresses(address_id),
-    CONSTRAINT fk_order FOREIGN KEY (order_id)
-        REFERENCES shopping_store.orders(order_id)
+        REFERENCES shopping_store.delivery_addresses(address_id)
 );
 
 -- Индексы для улучшения производительности

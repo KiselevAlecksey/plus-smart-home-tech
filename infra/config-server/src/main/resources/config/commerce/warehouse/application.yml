@@ -11,6 +11,30 @@ spring:
     username: password
     password: password
 
+feign:
+  circuitbreaker:
+    enabled: true
+  client:
+    config:
+      default:
+        error-decoder: ru.yandex.practicum.commerce.interactionapi.config.FeignErrorConfig
+        connect-timeout: 2000
+        read-timeout: 5000
+
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      slidingWindowSize: 20
+      failureRateThreshold: 50
+  instances:
+    warehouse:
+      slidingWindowSize: 10
+      waitDurationInOpenState: 10000
+      permittedNumberOfCallsInHalfOpenState: 3
+      slidingWindowType: COUNT_BASED
+      minimumNumberOfCalls: 5
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+
 logging:
   level:
     org:

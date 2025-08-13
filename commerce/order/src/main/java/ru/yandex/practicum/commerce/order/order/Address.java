@@ -37,6 +37,6 @@ public class Address {
     String flat;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
+    @JoinColumn(name = "order_id")
     Order order;
 }

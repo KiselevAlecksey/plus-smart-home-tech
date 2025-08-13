@@ -40,7 +40,7 @@ public class ProductInWarehouse {
     @Column(name = "weight", nullable = false)
     private double weight;
 
-    @OneToMany(mappedBy = "productInWarehouse", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "productInWarehouse", fetch = FetchType.EAGER)
     @Builder.Default
     private Set<BookedProductItem> bookings = new HashSet<>();
 }

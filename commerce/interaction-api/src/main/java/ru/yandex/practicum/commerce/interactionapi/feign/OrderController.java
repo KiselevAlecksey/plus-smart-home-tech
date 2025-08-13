@@ -30,34 +30,34 @@ public interface OrderController {
     OrderDto returnOrder(@RequestBody @Valid ProductReturnRequest returnRequest);
 
     @PostMapping("/payment")
-    OrderDto paymentOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto paymentOrder(@RequestBody UUID orderId);
 
     @PostMapping("/payment/failed")
-    OrderDto paymentFailedOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto paymentFailedOrder(@RequestBody UUID orderId);
 
     @PostMapping("/payment/success")
-    OrderDto paymentSuccessOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto paymentSuccessOrder(@RequestBody UUID orderId);
 
     @PostMapping("/delivery")
-    OrderDto deliveryOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto deliveryOrder(@RequestBody UUID orderId);
 
     @PostMapping("/delivery/failed")
-    OrderDto deliveryFailedOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto deliveryFailedOrder(@RequestBody UUID orderId);
 
     @PostMapping("/completed")
-    OrderDto completedOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto completedOrder(@RequestBody UUID orderId);
 
     @PostMapping("/calculate/total")
     @CachePut(value = "order", key = "#userName")
-    OrderDto calculateTotalOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto calculateTotalOrder(@RequestBody UUID orderId);
 
     @PostMapping("/calculate/delivery")
     @CachePut(value = "order", key = "#userName")
-    OrderDto calculateDeliveryOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto calculateDeliveryOrder(@RequestBody UUID orderId);
 
     @PostMapping("/assembly")
-    OrderDto assemblyOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto assemblyOrder(@RequestBody UUID orderId);
 
     @PostMapping("/assembly/failed")
-    OrderDto assemblyFailedOrder(@RequestBody @NotBlank UUID orderId);
+    OrderDto assemblyFailedOrder(@RequestBody UUID orderId);
 }

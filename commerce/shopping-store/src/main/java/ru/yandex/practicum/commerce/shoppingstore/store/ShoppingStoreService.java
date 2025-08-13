@@ -2,17 +2,10 @@ package ru.yandex.practicum.commerce.shoppingstore.store;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductFullResponseDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.*;
 import ru.yandex.practicum.commerce.interactionapi.enums.ProductCategory;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductCreateDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityStateRequest;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductUpdateDto;
 
-import java.math.BigDecimal;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-
 
 public interface ShoppingStoreService {
 
@@ -28,6 +21,6 @@ public interface ShoppingStoreService {
 
     ProductFullResponseDto getByProductId(String productId);
 
-    Map<UUID, BigDecimal> getPriceMapByProductIds(Set<UUID> productId);
+    ProductPriceDto fetchProductPricesByIds(ProductIdsDto dto);
 
 }

@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "cart_products", schema = "shopping_store")
+@Table(name = "order_cart_products", schema = "shopping_store")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,6 +17,10 @@ import java.util.UUID;
 public class CartProduct {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "cart_product_id", updatable = false, nullable = false)
+    private UUID id;
+
     @Column(name = "product_id", updatable = false, nullable = false)
     private UUID productId;
 
@@ -30,19 +34,19 @@ public class CartProduct {
     @Column(name = "quantity", nullable = false)
     private Long quantity;
 
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
-    BigDecimal price;
+    @Column(name = "price", precision = 12, scale = 2)
+    private BigDecimal price = BigDecimal.ZERO;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CartProduct that = (CartProduct) o;
-        return Objects.equals(productId, that.productId);
+        return id != null && Objects.equals(productId, that.productId) && Objects.equals(shoppingCartId, that.shoppingCartId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(productId);
+        return (id != null) ? id.hashCode() : System.identityHashCode(this);
     }
 }

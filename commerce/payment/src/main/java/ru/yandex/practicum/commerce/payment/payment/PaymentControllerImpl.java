@@ -24,7 +24,6 @@ import java.util.UUID;
 public class PaymentControllerImpl implements PaymentController {
     final PaymentService paymentService;
 
-
     @Override
     @RestLogging
     @PostMapping

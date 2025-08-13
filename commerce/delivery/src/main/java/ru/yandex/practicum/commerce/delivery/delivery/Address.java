@@ -9,7 +9,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "addresses", schema = "shopping_store")
+@Table(name = "delivery_addresses", schema = "shopping_store")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -33,15 +33,12 @@ public class Address {
     @Column(name = "house", nullable = false)
     String house;
 
-    @Column(name = "flat")
+    @Column(name = "flat", nullable = false)
     String flat;
 
-    @Column(name = "is_warehouse")
-    Boolean isWarehouse;
-
-    @OneToMany(mappedBy = "fromAddress")
+    @OneToMany(mappedBy = "fromAddress", fetch = FetchType.LAZY)
     List<Delivery> fromDeliveries;
 
-    @OneToMany(mappedBy = "toAddress")
+    @OneToMany(mappedBy = "toAddress", fetch = FetchType.LAZY)
     List<Delivery> toDeliveries;
 }

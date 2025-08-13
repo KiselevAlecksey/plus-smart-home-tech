@@ -14,14 +14,14 @@ CREATE TABLE IF NOT EXISTS shopping_store.products_in_warehouse (
 
 CREATE TABLE IF NOT EXISTS shopping_store.order_bookings (
     order_booking_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID NOT NULL
+    order_id UUID NOT NULL,
+    delivery_id UUID
 );
 
 CREATE TABLE IF NOT EXISTS shopping_store.booked_product_items (
     booked_item_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_booking_id UUID NOT NULL REFERENCES shopping_store.order_bookings(order_booking_id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES shopping_store.products_in_warehouse(product_id),
-    delivery_id UUID,
     quantity BIGINT NOT NULL,
     CONSTRAINT unique_booking_product UNIQUE (order_booking_id, product_id)
 );
