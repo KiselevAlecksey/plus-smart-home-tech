@@ -40,7 +40,6 @@ public class OrderServiceImpl implements OrderService {
     PaymentFeignClient paymentFeignClient;
     WarehouseFeignClient warehouseFeignClient;
     DeliveryFeignClient deliveryFeignClient;
-    CartProductRepository cartProductRepository;
 
     @Override
     public Page<OrderDto> getAllOrdersByUser(String userName, Pageable pageable) {
@@ -78,6 +77,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto returnOrder(ProductReturnRequest returnRequest) {
         Map<UUID, CartProduct> productDtoMap = returnRequest.products().stream()
                 .collect(Collectors.toMap(ProductDto::productId, productMapper::toEntityProduct));
@@ -108,6 +108,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto paymentOrder(UUID orderId) {
         Order order = getOrder(orderId);
         PaymentDto paymentDto = paymentFeignClient.paymentCreate(orderMapper.toOrderDto(order));
@@ -122,6 +123,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto paymentSuccessOrder(UUID orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow();
 
@@ -134,6 +136,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto paymentFailedOrder(UUID orderId) {
         Order order = getOrder(orderId);
         return orderMapper.toOrderDto(
@@ -146,6 +149,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto deliveryOrder(UUID orderId) {
         Order order = getOrder(orderId);
         return orderMapper.toOrderDto(
@@ -158,6 +162,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto deliveryFailedOrder(UUID orderId) {
         Order order = getOrder(orderId);
         return orderMapper.toOrderDto(
@@ -170,6 +175,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto completedOrder(UUID orderId) {
         Order order = getOrder(orderId);
         return orderMapper.toOrderDto(
@@ -182,6 +188,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto calculateTotalOrder(UUID orderId) {
         Order order = getOrder(orderId);
         BigDecimal productCost = paymentFeignClient.productCost(orderMapper.toOrderDto(order));
@@ -196,6 +203,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto calculateDeliveryOrder(UUID orderId) {
         Order order = getOrder(orderId);
 
@@ -220,6 +228,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto assemblyOrder(UUID orderId) {
         Order order = getOrder(orderId);
 
@@ -244,16 +253,8 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
-    private Order getOrder(UUID orderId) {
-        return orderRepository.findById(orderId).orElseThrow(() -> NoOrderFoundException.builder()
-                .message("Ошибка при поиске заказа")
-                .userMessage("Заказ не найден. Пожалуйста, проверьте идентификатор")
-                .httpStatus(HttpStatus.NOT_FOUND)
-                .cause(new RuntimeException("Заказ с ID " + orderId + " не найден"))
-                .build());
-    }
-
     @Override
+    @Transactional
     public OrderDto assemblyFailedOrder(UUID orderId) {
         Order order = getOrder(orderId);
         return orderMapper.toOrderDto(
@@ -263,5 +264,14 @@ public class OrderServiceImpl implements OrderService {
                                 .build()
                 )
         );
+    }
+
+    private Order getOrder(UUID orderId) {
+        return orderRepository.findById(orderId).orElseThrow(() -> NoOrderFoundException.builder()
+                .message("Ошибка при поиске заказа")
+                .userMessage("Заказ не найден. Пожалуйста, проверьте идентификатор")
+                .httpStatus(HttpStatus.NOT_FOUND)
+                .cause(new RuntimeException("Заказ с ID " + orderId + " не найден"))
+                .build());
     }
 }

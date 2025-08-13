@@ -25,12 +25,13 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static ru.yandex.practicum.commerce.interactionapi.Util.PERCENT_FEE;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PaymentServiceImpl implements PaymentService {
-    public static final double PERCENT_FEE = 0.1;
     PaymentMapper paymentMapper;
     PaymentRepository paymentRepository;
     ShoppingStoreFeignClient storeFeignClient;
@@ -38,6 +39,7 @@ public class PaymentServiceImpl implements PaymentService {
     OrderFeignClient orderFeignClient;
 
     @Override
+    @Transactional
     public PaymentDto paymentCreate(OrderDto dto) {
         Payment payment = Payment.builder()
                 .totalPayment(dto.totalPrice())
@@ -47,12 +49,11 @@ public class PaymentServiceImpl implements PaymentService {
                 .orderId(dto.orderId())
                 .build();
 
-        Payment p = paymentRepository.save(payment);
-
-        return paymentMapper.toPaymentDto(p);
+        return paymentMapper.toPaymentDto(paymentRepository.save(payment));
     }
 
     @Override
+    @Transactional
     public void paymentSuccess(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(getOrderExceptionSupplier(paymentId))
@@ -66,14 +67,15 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public BigDecimal totalCost(OrderDto dto) {
         BigDecimal fee = calculateFee(dto.productPrice());
         return dto.productPrice().add(fee).add(deliveryFeignClient.deliveryCost(dto)).setScale(2, RoundingMode.HALF_UP);
     }
 
-    @Cacheable(value = "fee", key = "#productPrice")
+    @Cacheable(value = "fee")
     private static BigDecimal calculateFee(BigDecimal productPrice) {
-        return productPrice.multiply(BigDecimal.valueOf(PERCENT_FEE)).setScale(2, RoundingMode.HALF_UP);
+        return productPrice.multiply(PERCENT_FEE).setScale(2, RoundingMode.HALF_UP);
     }
 
 
@@ -108,11 +110,11 @@ public class PaymentServiceImpl implements PaymentService {
                         entry -> uuidPriceProducts.get(entry.getKey()).multiply(BigDecimal.valueOf(entry.getValue())))
                 );
 
-        BigDecimal productCost = totalPrices.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-        return productCost;
+        return totalPrices.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override
+    @Transactional
     public void failed(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId).orElseThrow(getOrderExceptionSupplier(paymentId));
         orderFeignClient.paymentFailedOrder(payment.orderId);

@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.interactionapi.dto.DeliveryDto;
 import ru.yandex.practicum.commerce.interactionapi.dto.order.OrderDto;
@@ -19,24 +18,17 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.UUID;
 
-import static ru.yandex.practicum.commerce.interactionapi.Util.ADDRESSES;
+import static ru.yandex.practicum.commerce.interactionapi.Util.*;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DeliveryServiceImpl implements DeliveryService {
-    public static final int ADDRESS_COEFFICIENT1 = 1;
-    public static final int ADDRESS_COEFFICIENT2 = 2;
-    public static final BigDecimal FRAGILE_COEFFICIENT = BigDecimal.valueOf(0.2);
-    public static final BigDecimal WEIGHT_COEFFICIENT = BigDecimal.valueOf(0.3);
-    public static final BigDecimal VOLUME_COEFFICIENT = BigDecimal.valueOf(0.2);
-    public static final BigDecimal ADDRESS_TO_COEFFICIENT = BigDecimal.valueOf(0.2);
     AddressRepository addressRepository;
     DeliveryRepository deliveryRepository;
     DeliveryMapper deliveryMapper;
     OrderFeignClient orderFeignClient;
-    BigDecimal baseCostDelivery = BigDecimal.valueOf(5.0);
 
     @Override
     @Transactional
@@ -98,8 +90,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    @Cacheable(value = "cost", key = "{#orderDto.orderId, #orderDto.deliveryId, #orderDto.deliveryWeight, " +
-            "#orderDto.deliveryVolume, #orderDto.fragile}")
+    @Cacheable(value = "cost")
     public BigDecimal deliveryCost(OrderDto orderDto) {
         BigDecimal deliveryCost = baseCostDelivery;
         Delivery delivery = getDeliveryOrThrow(orderDto.deliveryId());
@@ -107,13 +98,18 @@ public class DeliveryServiceImpl implements DeliveryService {
         Address addressTo = delivery.getToAddress();
 
         if (isAddressEqualsAddress1(addressFrom)) {
-            deliveryCost = deliveryCost.multiply(BigDecimal.valueOf(ADDRESS_COEFFICIENT1)).setScale(2, RoundingMode.HALF_UP);
+            deliveryCost = deliveryCost.multiply(BigDecimal.valueOf(ADDRESS_COEFFICIENT1))
+                    .setScale(2, RoundingMode.HALF_UP);
         } else {
-            deliveryCost = deliveryCost.multiply(BigDecimal.valueOf(ADDRESS_COEFFICIENT2)).add(baseCostDelivery).setScale(2, RoundingMode.HALF_UP);
+            deliveryCost = deliveryCost.multiply(BigDecimal.valueOf(ADDRESS_COEFFICIENT2))
+                    .add(baseCostDelivery)
+                    .setScale(2, RoundingMode.HALF_UP);
         }
 
         if (orderDto.fragile()) {
-            deliveryCost = deliveryCost.multiply(FRAGILE_COEFFICIENT).add(deliveryCost).setScale(2, RoundingMode.HALF_UP);
+            deliveryCost = deliveryCost.multiply(FRAGILE_COEFFICIENT)
+                    .add(deliveryCost)
+                    .setScale(2, RoundingMode.HALF_UP);
         }
 
         deliveryCost = deliveryCost.multiply(

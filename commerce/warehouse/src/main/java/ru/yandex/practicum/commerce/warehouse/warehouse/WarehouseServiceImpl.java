@@ -31,9 +31,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     private final ProductInWarehouseMapper productInWarehouseMapper;
     private static final String CURRENT_ADDRESS =
             ADDRESSES[Random.from(new SecureRandom()).nextInt(0, 1)];
-
     private final OrderBookingRepository orderBookingRepository;
-    private final DeliveryFeignClient deliveryFeignClient;
 
     @Override
     @Transactional
