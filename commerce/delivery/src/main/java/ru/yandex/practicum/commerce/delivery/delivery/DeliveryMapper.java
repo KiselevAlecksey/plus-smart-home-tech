@@ -19,17 +19,11 @@ public interface DeliveryMapper {
     @Mapping(target = "deliveryState", source = "state")
     DeliveryDto toDto(Delivery entity);
 
-    @Named("toFromAddress")
-    @Mapping(target = "fromDeliveries", ignore = true)
-    @Mapping(target = "toDeliveries", ignore = true)
-    @Mapping(target = "id", ignore = true)
-    Address toFromAddressEntity(AddressDto dto);
-
     @Named("toToAddress")
     @Mapping(target = "fromDeliveries", ignore = true)
     @Mapping(target = "toDeliveries", ignore = true)
     @Mapping(target = "id", ignore = true)
-    Address toToAddressEntity(AddressDto dto);
+    Address toAddressEntity(AddressDto dto);
 
     AddressDto toAddressDto(Address entity);
 

@@ -52,7 +52,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 addressDto.house(),
                 addressDto.flat()
         ).orElseGet(() -> {
-            Address newAddress = deliveryMapper.toToAddressEntity(addressDto);
+            Address newAddress = deliveryMapper.toAddressEntity(addressDto);
             return addressRepository.saveAndFlush(newAddress);
         });
     }
@@ -96,14 +96,16 @@ public class DeliveryServiceImpl implements DeliveryService {
         Delivery delivery = getDeliveryOrThrow(orderDto.deliveryId());
         Address addressFrom = delivery.getFromAddress();
         Address addressTo = delivery.getToAddress();
+        Address warehouse = buildAddress(ADDRESSES[0]);
 
-        if (isAddressEqualsAddress1(addressFrom)) {
+        if (isAddressFromEqualsAddressWarehouse(addressFrom, warehouse)) {
             deliveryCost = deliveryCost.multiply(BigDecimal.valueOf(ADDRESS_COEFFICIENT1))
                     .setScale(2, RoundingMode.HALF_UP);
         } else {
             deliveryCost = deliveryCost.multiply(BigDecimal.valueOf(ADDRESS_COEFFICIENT2))
                     .add(baseCostDelivery)
                     .setScale(2, RoundingMode.HALF_UP);
+            warehouse = buildAddress(ADDRESSES[1]);
         }
 
         if (orderDto.fragile()) {
@@ -122,8 +124,18 @@ public class DeliveryServiceImpl implements DeliveryService {
                         .multiply(VOLUME_COEFFICIENT)
         ).setScale(2, RoundingMode.HALF_UP);
 
-        return isAddressEqualsAddress1(addressTo) ? deliveryCost
+        return addressTo.getStreet().equals(warehouse.getStreet()) ? deliveryCost
                 : deliveryCost.multiply(ADDRESS_TO_COEFFICIENT).add(deliveryCost).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private static Address buildAddress(String address) {
+        return Address.builder()
+                .country(address)
+                .city(address)
+                .street(address)
+                .house(address)
+                .flat(address)
+                .build();
     }
 
     @Override
@@ -131,11 +143,11 @@ public class DeliveryServiceImpl implements DeliveryService {
         return deliveryRepository.findByOrderId(UUID.fromString(orderId));
     }
 
-    private static boolean isAddressEqualsAddress1(Address addressFrom) {
-        return addressFrom.getCountry().equals(ADDRESSES[0])
-                || addressFrom.getCity().equals(ADDRESSES[0])
-                || addressFrom.getStreet().equals(ADDRESSES[0])
-                || addressFrom.getHouse().equals(ADDRESSES[0])
-                || addressFrom.getFlat().equals(ADDRESSES[0]);
+    private static boolean isAddressFromEqualsAddressWarehouse(Address address, Address warehouse) {
+        return address.getCountry().equals(warehouse.getCountry())
+                || address.getCity().equals(warehouse.getCity())
+                || address.getStreet().equals(warehouse.getStreet())
+                || address.getHouse().equals(warehouse.getHouse())
+                || address.getFlat().equals(warehouse.getFlat());
     }
 }

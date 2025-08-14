@@ -15,4 +15,5 @@ public class Util {
     public static final BigDecimal ADDRESS_TO_COEFFICIENT = BigDecimal.valueOf(0.2);
     public static final BigDecimal baseCostDelivery = BigDecimal.valueOf(5.0);
     public static final BigDecimal PERCENT_FEE = BigDecimal.valueOf(0.1);
+
 }

@@ -50,7 +50,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto createOrder(CreateNewOrderRequest request) {
-
         Order order = Order.builder()
                 .shoppingCartId(request.shoppingCart().shoppingCartId())
                 .state(OrderState.NEW)
@@ -82,7 +81,7 @@ public class OrderServiceImpl implements OrderService {
         Map<UUID, CartProduct> productDtoMap = returnRequest.products().stream()
                 .collect(Collectors.toMap(ProductDto::productId, productMapper::toEntityProduct));
 
-        Order order = getOrder(returnRequest.orderId());
+        Order order = getOrderOrThrow(returnRequest.orderId());
 
         warehouseFeignClient.returnOrder(
                 order.getProducts().stream()
@@ -110,7 +109,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto paymentOrder(UUID orderId) {
-        Order order = getOrder(orderId);
+        Order order = getOrderOrThrow(orderId);
         PaymentDto paymentDto = paymentFeignClient.paymentCreate(orderMapper.toOrderDto(order));
 
         return orderMapper.toOrderDto(
@@ -138,7 +137,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto paymentFailedOrder(UUID orderId) {
-        Order order = getOrder(orderId);
+        Order order = getOrderOrThrow(orderId);
         return orderMapper.toOrderDto(
                 orderRepository.saveAndFlush(
                         order.toBuilder()
@@ -151,7 +150,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto deliveryOrder(UUID orderId) {
-        Order order = getOrder(orderId);
+        Order order = getOrderOrThrow(orderId);
         return orderMapper.toOrderDto(
                 orderRepository.saveAndFlush(
                         order.toBuilder()
@@ -164,7 +163,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto deliveryFailedOrder(UUID orderId) {
-        Order order = getOrder(orderId);
+        Order order = getOrderOrThrow(orderId);
         return orderMapper.toOrderDto(
                 orderRepository.saveAndFlush(
                         order.toBuilder()
@@ -177,7 +176,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto completedOrder(UUID orderId) {
-        Order order = getOrder(orderId);
+        Order order = getOrderOrThrow(orderId);
         return orderMapper.toOrderDto(
                 orderRepository.saveAndFlush(
                         order.toBuilder()
@@ -190,7 +189,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto calculateTotalOrder(UUID orderId) {
-        Order order = getOrder(orderId);
+        Order order = getOrderOrThrow(orderId);
         BigDecimal productCost = paymentFeignClient.productCost(orderMapper.toOrderDto(order));
         return orderMapper.toOrderDto(
                 orderRepository.saveAndFlush(
@@ -205,9 +204,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto calculateDeliveryOrder(UUID orderId) {
-        Order order = getOrder(orderId);
+        Order order = getOrderOrThrow(orderId);
 
-        order.setDeliveryId(deliveryFeignClient.planDelivery(DeliveryDto.builder()
+        order.setDeliveryId(deliveryFeignClient.planDelivery(
+                DeliveryDto.builder()
                         .fromAddress(warehouseFeignClient.getAddressWarehouse())
                         .toAddress(orderMapper.toAddressDto(order.getAddress()))
                         .orderId(orderId)
@@ -230,7 +230,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto assemblyOrder(UUID orderId) {
-        Order order = getOrder(orderId);
+        Order order = getOrderOrThrow(orderId);
 
         Set<ProductDto> productDtos = order.getProducts().stream()
                 .map(productMapper::toProductDto)
@@ -256,7 +256,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto assemblyFailedOrder(UUID orderId) {
-        Order order = getOrder(orderId);
+        Order order = getOrderOrThrow(orderId);
         return orderMapper.toOrderDto(
                 orderRepository.saveAndFlush(
                         order.toBuilder()
@@ -266,12 +266,13 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
-    private Order getOrder(UUID orderId) {
-        return orderRepository.findById(orderId).orElseThrow(() -> NoOrderFoundException.builder()
-                .message("Ошибка при поиске заказа")
-                .userMessage("Заказ не найден. Пожалуйста, проверьте идентификатор")
-                .httpStatus(HttpStatus.NOT_FOUND)
-                .cause(new RuntimeException("Заказ с ID " + orderId + " не найден"))
-                .build());
+    private Order getOrderOrThrow(UUID orderId) {
+        return orderRepository.findById(orderId).orElseThrow(
+                () -> NoOrderFoundException.builder()
+                        .message("Ошибка при поиске заказа")
+                        .userMessage("Заказ не найден. Пожалуйста, проверьте идентификатор")
+                        .httpStatus(HttpStatus.NOT_FOUND)
+                        .cause(new RuntimeException("Заказ с ID " + orderId + " не найден"))
+                        .build());
     }
 }
