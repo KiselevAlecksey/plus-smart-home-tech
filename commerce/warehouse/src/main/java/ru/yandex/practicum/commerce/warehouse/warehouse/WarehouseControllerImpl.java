@@ -7,11 +7,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.interactionapi.aspect.RestLogging;
 import ru.yandex.practicum.commerce.interactionapi.dto.ShoppingCartRequestDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.AddProductToWarehouseRequest;
-import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.AddressDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.BookedProductsDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.NewProductInWarehouseRequestDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.*;
 import ru.yandex.practicum.commerce.interactionapi.feign.WarehouseController;
+
+import java.util.Set;
 
 import static ru.yandex.practicum.commerce.interactionapi.Util.X_REQUEST_ID_HEADER;
 
@@ -24,16 +24,11 @@ public class WarehouseControllerImpl implements WarehouseController {
     private final WarehouseService warehouseService;
 
     @Override
-    @PutMapping
-    @RestLogging
-    @ResponseStatus(HttpStatus.CREATED)
     public void addProductToWarehouse(@RequestBody NewProductInWarehouseRequestDto request) {
         warehouseService.addNewProductToWarehouse(request);
     }
 
     @Override
-    @PostMapping("/check")
-    @RestLogging
     public BookedProductsDto checkProductQuantityForShoppingCart(
             @RequestHeader(X_REQUEST_ID_HEADER) String headerValue,
             @RequestBody ShoppingCartRequestDto request
@@ -42,16 +37,27 @@ public class WarehouseControllerImpl implements WarehouseController {
     }
 
     @Override
-    @PostMapping("/add")
-    @RestLogging
     public void addProductInstanceToWarehouse(@RequestBody AddProductToWarehouseRequest request) {
         warehouseService.addProductInstanceToWarehouse(request);
     }
 
     @Override
-    @GetMapping("/address")
-    @RestLogging
     public AddressDto getAddressWarehouse() {
         return warehouseService.getAddressWarehouse();
+    }
+
+    @Override
+    public BookedProductsDto assembly(AssemblyProductsForOrderRequest request) {
+        return warehouseService.assembly(request);
+    }
+
+    @Override
+    public void returnOrder(Set<ProductDto> productDtos) {
+        warehouseService.returnOrder(productDtos);
+    }
+
+    @Override
+    public void shipToDelivery(ShippedToDeliveryRequest request) {
+        warehouseService.shipToDelivery(request);
     }
 }

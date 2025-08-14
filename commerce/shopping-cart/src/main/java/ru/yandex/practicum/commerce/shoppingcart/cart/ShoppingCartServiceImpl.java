@@ -29,7 +29,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     final ShoppingCartRepository cartRepository;
     final ShoppingCartMapper cartMapper;
     final WarehouseFeignClient warehouseClient;
-    private final RequestScopeObject requestScopeObject;
+    final RequestScopeObject requestScopeObject;
 
     @Override
     @Transactional
@@ -142,7 +142,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                         .build());
 
         CartProduct product = cart.getProducts().stream()
-                .filter(p -> p.getProductId().equals(changeQuantity.productId()))
+                        .filter(p -> p.getProductId().equals(changeQuantity.productId()))
                 .findFirst()
                 .orElseThrow(() -> ProductNotFoundException.builder()
                         .message("Ошибка при поиске продукта в корзине")

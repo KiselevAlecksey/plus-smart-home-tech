@@ -11,18 +11,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductFullResponseDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.*;
 import ru.yandex.practicum.commerce.interactionapi.exception.ProductNotFoundException;
 import ru.yandex.practicum.commerce.shoppingstore.product.Product;
 import ru.yandex.practicum.commerce.shoppingstore.product.ProductRepository;
 import ru.yandex.practicum.commerce.interactionapi.enums.ProductState;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductCreateDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityStateRequest;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductUpdateDto;
 import ru.yandex.practicum.commerce.interactionapi.enums.ProductCategory;
 import ru.yandex.practicum.commerce.shoppingstore.product.ProductMapper;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -43,7 +41,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
 
     @Override
     @Transactional
-    @CachePut(value = "product", key = "#result.productId")
+    @CachePut(value = "product", key = "#result.id")
     public ProductFullResponseDto createProduct(ProductCreateDto createDto) {
         Product product = productMapper.toEntityFromCreate(createDto);
         return productMapper.toResponseDto(productRepository.save(product));
@@ -101,8 +99,8 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     }
 
     @Override
+    @Cacheable(value = "product", key = "#productId")
     public ProductFullResponseDto getByProductId(String productId) {
-        try {
             return productRepository.findById(UUID.fromString(productId))
                     .map(productMapper::toResponseDto)
                     .orElseThrow(() -> ProductNotFoundException.builder()
@@ -111,6 +109,13 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
                             .httpStatus(HttpStatus.NOT_FOUND)
                             .cause(new RuntimeException("Продукт с ID " + productId + " не найден"))
                             .build());
+    }
+
+    @Override
+    public ProductPriceDto fetchProductPricesByIds(ProductIdsDto dto) {
+        try {
+            return new ProductPriceDto(productRepository.findAllByIdIn(dto.productIds()).stream()
+                    .collect(Collectors.toMap(Product::getId, Product::getPrice)));
         } catch (IllegalArgumentException e) {
             throw ProductNotFoundException.builder()
                     .message("Невалидный идентификатор продукта")

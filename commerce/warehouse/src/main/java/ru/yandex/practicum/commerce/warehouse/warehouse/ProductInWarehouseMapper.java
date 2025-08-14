@@ -8,7 +8,7 @@ import ru.yandex.practicum.commerce.interactionapi.dto.warehouse.NewProductInWar
 @Mapper(componentModel = "spring")
 public interface ProductInWarehouseMapper {
 
-    @Mapping(target = "productId", source = "productId")
+    @Mapping(target = "id", source = "productId")
     @Mapping(target = "fragile", source = "fragile")
     @Mapping(target = "width", source = "dimension.width")
     @Mapping(target = "height", source = "dimension.height")
@@ -17,7 +17,7 @@ public interface ProductInWarehouseMapper {
     @Mapping(target = "quantity", constant = "0L")
     ProductInWarehouse toEntity(NewProductInWarehouseRequestDto request);
 
-    @Mapping(target = "productId", source = "response.productId")
+    @Mapping(target = "id", source = "response.productId")
     @Mapping(target = "quantity", source = "response.quantity")
     @Mapping(target = "fragile", ignore = true)
     @Mapping(target = "width", ignore = true)

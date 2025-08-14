@@ -3,6 +3,9 @@ package ru.yandex.practicum.commerce.warehouse.warehouse;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -12,12 +15,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@ToString
+@ToString(exclude = "bookings")
 public class ProductInWarehouse {
 
     @Id
     @Column(name = "product_id", updatable = false, nullable = false)
-    private UUID productId;
+    private UUID id;
 
     @Column(name = "quantity", nullable = false)
     private Long quantity;
@@ -36,4 +39,8 @@ public class ProductInWarehouse {
 
     @Column(name = "weight", nullable = false)
     private double weight;
+
+    @OneToMany(mappedBy = "productInWarehouse", fetch = FetchType.EAGER)
+    @Builder.Default
+    private Set<BookedProductItem> bookings = new HashSet<>();
 }

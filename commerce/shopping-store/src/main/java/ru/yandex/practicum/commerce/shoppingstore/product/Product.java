@@ -21,7 +21,7 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "product_id", updatable = false, nullable = false)
-    private UUID productId;
+    private UUID id;
 
     @Column(name = "product_name", nullable = false)
     private String productName;
@@ -41,7 +41,7 @@ public class Product {
     private ProductState productState;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "product_category")
+    @Column(name = "product_category", nullable = false)
     private ProductCategory productCategory;
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
