@@ -39,7 +39,6 @@ public class PaymentServiceImpl implements PaymentService {
     OrderFeignClient orderFeignClient;
 
     @Override
-    @Transactional
     public PaymentDto paymentCreate(OrderDto dto) {
         Payment payment = Payment.builder()
                 .totalPayment(dto.totalPrice())
@@ -53,7 +52,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional
     public void paymentSuccess(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(getOrderExceptionSupplier(paymentId))
@@ -61,13 +59,13 @@ public class PaymentServiceImpl implements PaymentService {
                 .state(PaymentStatus.SUCCESS)
                 .build();
 
-        orderFeignClient.paymentSuccessOrder(payment.orderId);
+        orderFeignClient.paymentSuccessOrder(payment.getOrderId());
 
         paymentRepository.saveAndFlush(payment);
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public BigDecimal totalCost(OrderDto dto) {
         BigDecimal fee = calculateFee(dto.productPrice());
         return dto.productPrice().add(fee).add(deliveryFeignClient.deliveryCost(dto)).setScale(2, RoundingMode.HALF_UP);
@@ -95,6 +93,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Cacheable(value = "productCost", key = "#dto.orderId")
+    @Transactional(readOnly = true)
     public BigDecimal productCost(OrderDto dto) {
         Map<UUID, Long> productMap = dto.products().stream()
                 .collect(Collectors.toMap(ProductDto::productId, ProductDto::quantity));
@@ -114,10 +113,9 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional
     public void failed(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId).orElseThrow(getOrderExceptionSupplier(paymentId));
-        orderFeignClient.paymentFailedOrder(payment.orderId);
+        orderFeignClient.paymentFailedOrder(payment.getOrderId());
         paymentRepository.saveAndFlush(payment.toBuilder().state(PaymentStatus.FAILED).build());
     }
 }

@@ -37,10 +37,10 @@ public class Address {
     @Column(name = "flat", nullable = false)
     String flat;
 
-    @OneToMany(mappedBy = "fromAddress", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "fromAddress")
     List<Delivery> fromDeliveries;
 
-    @OneToMany(mappedBy = "toAddress", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "toAddress")
     List<Delivery> toDeliveries;
 
     @Override

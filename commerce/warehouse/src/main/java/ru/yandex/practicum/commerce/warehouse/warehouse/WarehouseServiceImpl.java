@@ -34,7 +34,6 @@ public class WarehouseServiceImpl implements WarehouseService {
     private final OrderBookingRepository orderBookingRepository;
 
     @Override
-    @Transactional
     @CachePut(value = "product", key = "#request.productId")
     public void addNewProductToWarehouse(NewProductInWarehouseRequestDto request) {
         ProductInWarehouse product = productInWarehouseMapper.toEntity(request);
@@ -43,6 +42,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     @Override
     @Cacheable(value = "product", key = "#request.productId")
+    @Transactional(readOnly = true)
     public BookedProductsDto checkProductQuantityForShoppingCart(ShoppingCartRequestDto request) {
         if (request.products().isEmpty()) return getDefaultBookedProductsDto();
         Set<ProductInWarehouse> productsInCart = getProductsSetFromDto(request.products().stream());
@@ -53,7 +53,6 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
-    @Transactional
     @CachePut(value = "product", key = "#request.productId")
     public void addProductInstanceToWarehouse(AddProductToWarehouseRequest request) {
         ProductInWarehouse product = getProductInWarehouseOrThrow(request);
@@ -76,7 +75,6 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
-    @Transactional
     public BookedProductsDto assembly(AssemblyProductsForOrderRequest request) {
         Map<UUID, ProductInWarehouse> orderProductsMap = request.products().stream()
                 .collect(Collectors.toMap(ProductDto::productId, productInWarehouseMapper::toEntity));
@@ -117,7 +115,6 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
-    @Transactional
     public void returnOrder(Set<ProductDto> productDtos) {
         Set<ProductInWarehouse> products = getProductsSetFromDto(productDtos.stream());
 

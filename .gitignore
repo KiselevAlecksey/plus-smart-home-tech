@@ -4,6 +4,8 @@
 *.iws
 *.iml
 *.ipr
+-tree -r a320e6d
+ck --lost-found
 
 ### Java ###
 # Compiled class file

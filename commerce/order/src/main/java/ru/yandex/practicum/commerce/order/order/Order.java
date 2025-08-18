@@ -34,14 +34,14 @@ public class Order {
     UUID deliveryId;
 
     @Column(name = "user_name", nullable = false)
-    private String userName;
+    String userName;
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Address address;
+    Address address;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<CartProduct> products = new HashSet<>();
+    Set<CartProduct> products = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)

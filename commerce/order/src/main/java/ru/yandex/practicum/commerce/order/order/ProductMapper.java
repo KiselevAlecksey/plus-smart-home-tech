@@ -10,16 +10,12 @@ import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityDt
 @Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true))
 public interface ProductMapper {
 
-    @Mapping(target = "productId", source = "productId")
-    @Mapping(target = "quantity", source = "quantity")
     ProductResponseDto toResponseProductDto(CartProduct product);
 
     ProductDto toProductDto(CartProduct product);
 
     CartProduct toEntityProduct(ProductResponseDto dto);
 
-    @Mapping(target = "productId", source = "productId")
-    @Mapping(target = "quantity", source = "quantity")
     CartProduct toEntityProduct(ProductDto dto);
 
     @Mapping(target = "productId", source = "productId")

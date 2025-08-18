@@ -2,6 +2,7 @@ package ru.yandex.practicum.commerce.warehouse.warehouse;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,19 +15,20 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderBooking {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "order_booking_id", updatable = false, nullable = false)
-    private UUID id;
+    UUID id;
 
     @Column(name = "order_id", nullable = false)
-    private UUID orderId;
+    UUID orderId;
 
     @Column(name = "delivery_id")
-    private UUID deliveryId;
+    UUID deliveryId;
 
     @OneToMany(mappedBy = "orderBooking", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<BookedProductItem> bookedItems = new HashSet<>();
+    Set<BookedProductItem> bookedItems = new HashSet<>();
 }

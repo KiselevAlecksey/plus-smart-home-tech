@@ -2,6 +2,7 @@ package ru.yandex.practicum.commerce.order.order;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -14,28 +15,29 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartProduct {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "cart_product_id", updatable = false, nullable = false)
-    private UUID id;
+    UUID id;
 
     @Column(name = "product_id", updatable = false, nullable = false)
-    private UUID productId;
+    UUID productId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    Order order;
 
     @Column(name = "shopping_cart_id")
-    private UUID shoppingCartId;
+    UUID shoppingCartId;
 
     @Column(name = "quantity", nullable = false)
-    private Long quantity;
+    Long quantity;
 
     @Column(name = "price", precision = 12, scale = 2)
-    private BigDecimal price = BigDecimal.ZERO;
+    BigDecimal price = BigDecimal.ZERO;
 
     @Override
     public boolean equals(Object o) {

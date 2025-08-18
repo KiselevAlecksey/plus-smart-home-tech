@@ -33,6 +33,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     final ProductMapper productMapper;
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(value = "products", key = "#categoty")
     public Page<ProductFullResponseDto> getProductsCategorySort(ProductCategory category, Pageable pageable) {
         return productRepository.findByProductCategory(category, pageable)
@@ -40,7 +41,6 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     }
 
     @Override
-    @Transactional
     @CachePut(value = "product", key = "#result.id")
     public ProductFullResponseDto createProduct(ProductCreateDto createDto) {
         Product product = productMapper.toEntityFromCreate(createDto);
@@ -48,7 +48,6 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     }
 
     @Override
-    @Transactional
     @CachePut(value = "product", key = "#updateDto.productId")
     public ProductFullResponseDto updateProduct(ProductUpdateDto updateDto) {
         Product product = productRepository.findById(updateDto.productId())
@@ -65,7 +64,6 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     }
 
     @Override
-    @Transactional
     @CacheEvict(value = "product", key = "#productId")
     public boolean removeProductFromStore(UUID productId) {
         try {
@@ -82,7 +80,6 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     }
 
     @Override
-    @Transactional
     @CachePut(value = "product", key = "#stateRequest.productId")
     public boolean setProductQuantityState(ProductQuantityStateRequest stateRequest) {
         try {
@@ -100,6 +97,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
 
     @Override
     @Cacheable(value = "product", key = "#productId")
+    @Transactional(readOnly = true)
     public ProductFullResponseDto getByProductId(String productId) {
             return productRepository.findById(UUID.fromString(productId))
                     .map(productMapper::toResponseDto)
@@ -112,6 +110,7 @@ public class ShoppingStoreServiceImpl implements ShoppingStoreService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProductPriceDto fetchProductPricesByIds(ProductIdsDto dto) {
         try {
             return new ProductPriceDto(productRepository.findAllByIdIn(dto.productIds()).stream()

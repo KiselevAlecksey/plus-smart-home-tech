@@ -32,14 +32,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     final RequestScopeObject requestScopeObject;
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public ShoppingCartResponseDto getShoppingCartByUserName(String userName) {
         return cartMapper.toResponseDto(getShoppingCart(userName));
     }
 
     @Cacheable(value = "userShoppingCart", key = "#userName")
+    @Transactional(readOnly = true)
     private ShoppingCart getShoppingCart(String userName) {
-        ShoppingCart cart = cartRepository.findByUserName(userName)
+        return cartRepository.findByUserName(userName)
                 .orElseGet(() -> {
                     ShoppingCart newCart = ShoppingCart.builder()
                             .userName(userName)
@@ -48,7 +49,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                             .build();
                     return cartRepository.save(newCart);
                 });
-        return cart;
     }
 
     @Override
@@ -102,7 +102,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     @Override
-    @Transactional
     @CacheEvict(value = "userShoppingCart", key = "#userName")
     public void removeShoppingCart(String userName) {
         ShoppingCart cart = cartRepository.findByUserName(userName)

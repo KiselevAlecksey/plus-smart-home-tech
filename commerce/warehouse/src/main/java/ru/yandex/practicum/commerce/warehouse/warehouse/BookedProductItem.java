@@ -2,6 +2,7 @@ package ru.yandex.practicum.commerce.warehouse.warehouse;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
 
@@ -12,21 +13,22 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookedProductItem {
 
     @Id
     @Column(name = "booked_item_id")
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_booking_id")
-    private OrderBooking orderBooking;
+    OrderBooking orderBooking;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
-    private ProductInWarehouse productInWarehouse;
+    ProductInWarehouse productInWarehouse;
 
     @Column(nullable = false)
-    private long quantity;
+    long quantity;
 }
