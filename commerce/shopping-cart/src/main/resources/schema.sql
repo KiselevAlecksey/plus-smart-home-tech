@@ -5,7 +5,7 @@ CREATE SCHEMA IF NOT EXISTS shopping_store;
 -- Таблица: shopping_cart (корзины покупок)
 CREATE TABLE IF NOT EXISTS shopping_store.shopping_cart (
     shopping_cart_id UUID DEFAULT gen_random_uuid() PRIMARY KEY NOT NULL,
-    user_name VARCHAR(256) NOT NULL UNIQUE,
+    user_name VARCHAR(256) NOT NULL,
     state VARCHAR(128) NOT NULL
 );
 

@@ -2,6 +2,7 @@ package ru.yandex.practicum.commerce.shoppingcart.cart.product;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.commerce.shoppingcart.cart.ShoppingCart;
 
 import java.util.Objects;
@@ -14,18 +15,19 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartProduct {
 
     @Id
     @Column(name = "product_id", updatable = false, nullable = false)
-    private UUID productId;
+    UUID productId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shopping_cart_id", nullable = false)
-    private ShoppingCart shoppingCart;
+    ShoppingCart shoppingCart;
 
     @Column(name = "quantity", nullable = false)
-    private Long quantity;
+    Long quantity;
 
     @Override
     public boolean equals(Object o) {

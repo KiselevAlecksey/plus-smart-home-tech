@@ -3,6 +3,7 @@ package ru.yandex.practicum.commerce.shoppingcart.cart;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.commerce.shoppingcart.cart.product.CartProduct;
 
 import java.util.HashSet;
@@ -16,21 +17,22 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ShoppingCart {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "shopping_cart_id", updatable = false, nullable = false)
-    private UUID shoppingCartId;
+    UUID shoppingCartId;
 
     @Column(name = "user_name", nullable = false)
-    private String userName;
+    String userName;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
-    private ShoppingCartState state;
+    ShoppingCartState state;
 
     @OneToMany(mappedBy = "shoppingCart", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CartProduct> products;
+    Set<CartProduct> products;
 }
 

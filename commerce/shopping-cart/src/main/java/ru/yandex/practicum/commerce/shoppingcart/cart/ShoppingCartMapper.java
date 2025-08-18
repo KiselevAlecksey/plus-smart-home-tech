@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ShoppingCartMapper {
 
-    @Mapping(target = "shoppingCartId", source = "shoppingCartId")
     @Mapping(target = "products", expression = "java(mapCartProductsToMap(shoppingCart.getProducts()))")
     ShoppingCartResponseDto toResponseDto(ShoppingCart shoppingCart);
 

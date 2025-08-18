@@ -1,7 +1,5 @@
 package ru.yandex.practicum.commerce.shoppingcart.cart;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -28,7 +26,7 @@ public class ShoppingCartControllerImpl implements ShoppingCartController {
     @GetMapping
     @RestLogging
     public ShoppingCartResponseDto getShoppingCartByUserName(
-            @RequestParam(value = "username") @NotBlank String userName) {
+            @RequestParam(value = "username") String userName) {
         return shoppingCartService.getShoppingCartByUserName(userName);
     }
 
@@ -36,8 +34,8 @@ public class ShoppingCartControllerImpl implements ShoppingCartController {
     @PutMapping
     @RestLogging
     public ShoppingCartResponseDto addProductsToShoppingCart(
-            @RequestParam(value = "username") @NotBlank String userName,
-            @RequestBody(required = false) @Valid Map<UUID, Long> products) {
+            @RequestParam(value = "username") String userName,
+            @RequestBody(required = false) Map<UUID, Long> products) {
         if (products == null || products.isEmpty()) {
             throw new IllegalArgumentException("Products map cannot be empty");
         }
@@ -47,7 +45,7 @@ public class ShoppingCartControllerImpl implements ShoppingCartController {
     @Override
     @DeleteMapping
     @RestLogging
-    public void removeShoppingCart(@RequestParam(value = "username") @NotBlank String userName) {
+    public void removeShoppingCart(@RequestParam(value = "username") String userName) {
         shoppingCartService.removeShoppingCart(userName);
     }
 
@@ -55,7 +53,7 @@ public class ShoppingCartControllerImpl implements ShoppingCartController {
     @PostMapping("/remove")
     @RestLogging
     public ShoppingCartResponseDto removeShoppingCartProducts(
-            @RequestParam(value = "username") @NotBlank String userName,
+            @RequestParam(value = "username") String userName,
             @RequestBody Set<UUID> products) {
         return shoppingCartService.removeShoppingCartProducts(userName, products);
     }
@@ -64,8 +62,8 @@ public class ShoppingCartControllerImpl implements ShoppingCartController {
     @PostMapping("/change-quantity")
     @RestLogging
     public ShoppingCartResponseDto changeProductQuantity(
-            @RequestParam(value = "username") @NotBlank String userName,
-            @RequestBody(required = false) @Validated ProductQuantityDto changeQuantity) {
+            @RequestParam(value = "username") String userName,
+            @RequestBody(required = false) ProductQuantityDto changeQuantity) {
         return shoppingCartService.changeProductQuantity(userName, changeQuantity);
     }
 }

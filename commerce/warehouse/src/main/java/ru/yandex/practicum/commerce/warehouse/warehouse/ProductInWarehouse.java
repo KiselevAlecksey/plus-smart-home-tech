@@ -2,7 +2,11 @@ package ru.yandex.practicum.commerce.warehouse.warehouse;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -12,28 +16,33 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@ToString
+@ToString(exclude = "bookings")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductInWarehouse {
 
     @Id
     @Column(name = "product_id", updatable = false, nullable = false)
-    private UUID productId;
+    UUID id;
 
     @Column(name = "quantity", nullable = false)
-    private Long quantity;
+    Long quantity;
 
     @Column(name = "fragile", nullable = false)
-    private boolean fragile;
+    boolean fragile;
 
     @Column(name = "width", nullable = false)
-    private double width;
+    double width;
 
     @Column(name = "height", nullable = false)
-    private double height;
+    double height;
 
     @Column(name = "depth", nullable = false)
-    private double depth;
+    double depth;
 
     @Column(name = "weight", nullable = false)
-    private double weight;
+    double weight;
+
+    @OneToMany(mappedBy = "productInWarehouse")
+    @Builder.Default
+    Set<BookedProductItem> bookings = new HashSet<>();
 }
