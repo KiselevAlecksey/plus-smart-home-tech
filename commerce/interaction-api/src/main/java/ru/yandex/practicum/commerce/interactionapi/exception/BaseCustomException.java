@@ -1,6 +1,5 @@
 package ru.yandex.practicum.commerce.interactionapi.exception;
 
-import lombok.Builder;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
@@ -9,14 +8,14 @@ import java.util.Arrays;
 import java.util.List;
 
 @Getter
-public abstract class AbstractBusinessValidationException extends RuntimeException {
+public abstract class BaseCustomException extends RuntimeException {
     private final Instant timestamp;
     private final HttpStatus httpStatus;
     private final String userMessage;
     private final List<StackTraceElement> stackTraceElements;
     private final List<Throwable> suppressedExceptions;
 
-    protected AbstractBusinessValidationException(
+    protected BaseCustomException(
             String message,
             String userMessage,
             HttpStatus httpStatus,

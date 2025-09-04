@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record ProductUpdateDto(
-        @NotNull
         UUID productId,
 
         @NotBlank

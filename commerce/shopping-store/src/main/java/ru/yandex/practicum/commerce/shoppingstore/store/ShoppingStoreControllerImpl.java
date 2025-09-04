@@ -9,12 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.interactionapi.aspect.RestLogging;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductFullResponseDto;
+import ru.yandex.practicum.commerce.interactionapi.dto.product.*;
 import ru.yandex.practicum.commerce.interactionapi.feign.ShoppingStoreController;
 import ru.yandex.practicum.commerce.interactionapi.enums.ProductCategory;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductCreateDto;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductQuantityStateRequest;
-import ru.yandex.practicum.commerce.interactionapi.dto.product.ProductUpdateDto;
 import ru.yandex.practicum.commerce.interactionapi.enums.QuantityState;
 
 import java.util.UUID;
@@ -23,12 +20,11 @@ import java.util.UUID;
 @RestController
 @Validated
 @RequiredArgsConstructor
-@RequestMapping(path = "/api/v1/shopping-store")
+@RequestMapping("/api/v1/shopping-store")
 public class ShoppingStoreControllerImpl implements ShoppingStoreController {
     private final ShoppingStoreService storeService;
 
     @Override
-    @GetMapping
     @RestLogging
     public Page<ProductFullResponseDto> getProductsCategorySort(
             @RequestParam String category,
@@ -44,31 +40,27 @@ public class ShoppingStoreControllerImpl implements ShoppingStoreController {
     }
 
     @Override
-    @PutMapping
     @RestLogging
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductFullResponseDto createProduct(@RequestBody @Validated ProductCreateDto createDto) {
+    public ProductFullResponseDto createProduct(ProductCreateDto createDto) {
         return storeService.createProduct(createDto);
     }
 
     @Override
-    @PostMapping
     @RestLogging
-    public ProductFullResponseDto updateProduct(@RequestBody @Validated ProductUpdateDto updateDto) {
+    public ProductFullResponseDto updateProduct(ProductUpdateDto updateDto) {
         return storeService.updateProduct(updateDto);
     }
 
     @Override
-    @PostMapping("/removeProductFromStore")
     @RestLogging
-    public boolean removeProductFromStore(@RequestBody UUID productId) {
+    public boolean removeProductFromStore(UUID productId) {
         return storeService.removeProductFromStore(productId);
     }
 
     @Override
-    @PostMapping("/quantityState")
     @RestLogging
-    public boolean setProductQuantityState(@RequestParam UUID productId, @RequestParam String quantityState) {
+    public boolean setProductQuantityState(UUID productId, String quantityState) {
         QuantityState state = QuantityState.from(quantityState.toUpperCase())
                 .orElseThrow(() -> new IllegalArgumentException("Не поддерживаемое состояние: " + quantityState));
 
@@ -81,9 +73,14 @@ public class ShoppingStoreControllerImpl implements ShoppingStoreController {
     }
 
     @Override
-    @GetMapping("/{productId}")
     @RestLogging
-    public ProductFullResponseDto getByProductId(@PathVariable String productId) {
+    public ProductFullResponseDto getByProductId(String productId) {
         return storeService.getByProductId(productId);
+    }
+
+    @Override
+    @RestLogging
+    public ProductPriceDto fetchProductPricesByIds(ProductIdsDto dto) {
+        return storeService.fetchProductPricesByIds(dto);
     }
 }
