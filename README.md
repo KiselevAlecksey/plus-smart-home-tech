@@ -77,6 +77,62 @@
 - **Configuration Service** — централизованное управление конфигурациями
 - **Service Discovery** — механизм обнаружения сервисов
 
+## Схема модулей
+
+```
+graph TD
+    subgraph "Client Layer"
+        UI[Web Interface]
+        MH[Mobile App]
+        DH[Device Hubs]
+    end
+    
+    subgraph "API Gateway"
+        AG[Spring Cloud Gateway]
+    end
+    
+    subgraph "Telemetry Module"
+        HR[Hub Router]
+        COL[Collector]
+        AGG[Aggregator]
+        ANZ[Analyzer]
+    end
+    
+    subgraph "Commerce Module"
+        STORE[Shopping Store]
+        CART[Shopping Cart]
+        ORDER[Order]
+        PAY[Payment]
+        WH[Warehouse]
+        DELIV[Delivery]
+    end
+    
+    subgraph "Infrastructure"
+        CONFIG[Config Server]
+        DISC[Service Discovery]
+        DB[(PostgreSQL)]
+        KFK[Kafka]
+    end
+    
+    UI --> AG
+    MH --> AG
+    DH --> HR
+    AG --> STORE
+    AG --> CART
+    AG --> ORDER
+    HR --> COL
+    COL --> KFK
+    KFK --> AGG
+    KFK --> ANZ
+    ANZ --> HR
+    STORE --> CART
+    CART --> ORDER
+    ORDER --> PAY
+    ORDER --> WH
+    WH --> DELIV
+    WH --> ORDER
+```
+
 ## 🛠 Технологический стек
 
 | Технология     | Версия   |
