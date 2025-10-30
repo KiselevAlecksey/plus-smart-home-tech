@@ -79,7 +79,7 @@
 
 ## Схема модулей
 
-```
+```mermaid
 graph TD
     subgraph "Client Layer"
         UI[Web Interface]
